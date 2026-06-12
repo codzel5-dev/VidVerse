@@ -1,0 +1,17 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://21.0.9.3:3000
+- Environments: .env
+✓ Ready in 261ms
+
+ GET / 200 in 619ms (next.js: 135ms, application-code: 485ms)
+ GET / 200 in 128ms (next.js: 3ms, application-code: 125ms)
+ GET /api/video?limit=6&sort=popular 200 in 81ms (next.js: 63ms, application-code: 18ms)
+ GET /api/video?limit=6&sort=popular 200 in 8ms (next.js: 2ms, application-code: 6ms)
+ GET /api/video/cmqau1vr5000xxwvljccze6g5 200 in 701ms (next.js: 684ms, application-code: 17ms)
+ GET /api/video/cmqau1vr5000xxwvljccze6g5 200 in 16ms (next.js: 10ms, application-code: 6ms)
+ POST /api/auth/login 200 in 486ms (next.js: 151ms, application-code: 335ms)
+ GET /api/search?q=Python 200 in 128ms (next.js: 113ms, application-code: 15ms)
+ GET /api/search?q=Python 200 in 11ms (next.js: 5ms, application-code: 6ms)
+ GET /api/admin/stats 200 in 128ms (next.js: 110ms, application-code: 18ms)
+ GET /api/admin/stats 200 in 10ms (next.js: 1774µs, application-code: 8ms)

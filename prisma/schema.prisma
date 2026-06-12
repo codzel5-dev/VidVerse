@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  avatar        String?
+  bio           String?
+  role          String    @default("user")
+  isBanned      Boolean   @default(false)
+  emailVerified Boolean   @default(false)
+  
+  videos        Video[]
+  comments      Comment[]
+  likes         Like[]
+  savedVideos   SavedVideo[]
+  ratings       Rating[]
+  enrollments   Enrollment[]
+  watchHistory  WatchHistory[]
+  notifications Notification[]
+  orders        Order[]
+  activities    Activity[]
+  courses       Course[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  color       String?
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  
+  videos      Video[]
+  courses     Course[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  
+  videoTags  VideoTag[]
+  courseTags CourseTag[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VideoTag {
+  videoId String
+  video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([videoId, tagId])
+}
+
+model CourseTag {
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([courseId, tagId])
+}
+
+model Video {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  description     String?
+  thumbnail       String?
+  duration        Int       @default(0)
+  views           Int       @default(0)
+  isFree          Boolean   @default(true)
+  isPublished     Boolean   @default(false)
+  isFeatured      Boolean   @default(false)
+  
+  seekVideoId     String?   @unique
+  seekStatus      String?
+  seekPlayerId    String?
+  embedUrl        String?
+  
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  comments        Comment[]
+  likes           Like[]
+  savedBy         SavedVideo[]
+  ratings         Rating[]
+  watchHistory    WatchHistory[]
+  videoTags       VideoTag[]
+  lesson          Lesson?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Course {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  description     String?
+  thumbnail       String?
+  price           Float     @default(0)
+  currency        String    @default("USD")
+  level           String    @default("beginner")
+  isPublished     Boolean   @default(false)
+  isFeatured      Boolean   @default(false)
+  
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  lessons         Lesson[]
+  enrollments     Enrollment[]
+  courseTags      CourseTag[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int      @default(0)
+  duration    Int      @default(0)
+  videoId     String?  @unique
+  video       Video?   @relation(fields: [videoId], references: [id])
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  isFree      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+  progress    Float    @default(0)
+  lastLessonId String?
+  isCompleted Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, courseId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  isReported Boolean  @default(false)
+  
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  videoId   String?
+  video     Video?    @relation(fields: [videoId], references: [id])
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  likes     Like[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  type      String   @default("like")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  videoId   String?
+  video     Video?   @relation(fields: [videoId], references: [id])
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+model SavedVideo {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, videoId])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  score     Int
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, videoId])
+}
+
+model WatchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id])
+  progress  Float    @default(0)
+  lastPosition Int   @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, videoId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  amount          Float
+  currency        String   @default("USD")
+  status          String   @default("pending")
+  paymentMethod   String?
+  paymentId       String?
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  courseId        String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  metadata  String?
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
