@@ -1,13 +1,15 @@
 {
-  "name": "myapp",
+  "name": "vidverse",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "prisma:seed": "npx tsx prisma/seed.ts"
+    "db:push": "prisma db push",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "postinstall": "prisma generate",
   },
   "prisma": {
     "seed": "bunx tsx prisma/seed.ts"
@@ -50,10 +52,15 @@
   },
   "ignoreScripts": [
     "sharp",
-    "unrs-resolver"
+    "unrs-resolver",
+    "better-sqlite3"
   ],
   "trustedDependencies": [
     "sharp",
-    "unrs-resolver"
+    "unrs-resolver",
+    "better-sqlite3",
+    "@prisma/adapter-better-sqlite3",
+    "@prisma/client",
+    "prisma"
   ]
 }

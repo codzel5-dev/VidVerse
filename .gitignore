@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,33 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+/db/
+*.db
+
+# screenshots
+screenshot*.png
+
+# upload/download folders
+/upload/
+/download/
+
+# agent context
+/agent-ctx/
+/tool-results/
+
+# seekstreaming docs
+seekstreaming-*.json
+
+# dev log
+dev.log
+
+# worklog
+worklog.md
+
+# skills
+/skills/
+
+# prisma config for custom db path
+prisma.config.ts

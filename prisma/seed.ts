@@ -1,11 +1,35 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import path from 'path'
 
 const dbPath = path.join(__dirname, '..', 'db', 'custom.db')
 const adapter = new PrismaBetterSqlite3({ url: 'file:' + dbPath })
 const prisma = new PrismaClient({ adapter })
+
+// YouTube-style share code generator
+const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+function generateShareCode(): string {
+  const bytes = crypto.randomBytes(8)
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += CHARSET[bytes[i] % CHARSET.length]
+  }
+  return code
+}
+
+async function generateUniqueShareCode(): Promise<string> {
+  let code = generateShareCode()
+  let attempts = 0
+  while (attempts < 100) {
+    const existing = await prisma.video.findUnique({ where: { shareCode: code } })
+    if (!existing) return code
+    code = generateShareCode()
+    attempts++
+  }
+  return generateShareCode() + Date.now().toString(36).slice(-4)
+}
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -257,10 +281,12 @@ async function main() {
       .replace(/\s+/g, '-')
       .concat('-', Date.now().toString(36) + Math.random().toString(36).slice(2, 6))
 
+    const shareCode = await generateUniqueShareCode()
     const video = await prisma.video.create({
       data: {
         ...data,
         slug,
+        shareCode,
         isFree: true,
         isPublished: true,
         thumbnail: `https://picsum.photos/seed/${slug.slice(0, 10)}/640/360`,
