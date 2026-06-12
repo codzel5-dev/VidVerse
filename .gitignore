@@ -70,3 +70,4 @@ worklog.md
 
 # prisma config for custom db path
 prisma.config.ts
+.env

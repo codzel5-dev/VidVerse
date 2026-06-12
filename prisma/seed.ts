@@ -1,12 +1,21 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import path from 'path'
 
-const dbPath = path.join(__dirname, '..', 'db', 'custom.db')
-const adapter = new PrismaBetterSqlite3({ url: 'file:' + dbPath })
-const prisma = new PrismaClient({ adapter })
+const connectionString = process.env.DATABASE_URL || ''
+
+function createPrismaClient() {
+  if (connectionString.startsWith('postgresql://')) {
+    const pool = new pg.Pool({ connectionString, ssl: { rejectUnauthorized: false } })
+    const adapter = new PrismaPg(pool)
+    return new PrismaClient({ adapter })
+  }
+  return new PrismaClient()
+}
+
+const prisma = createPrismaClient()
 
 // YouTube-style share code generator
 const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -153,7 +162,7 @@ async function main() {
     {
       title: 'تعلم JavaScript من الصفر إلى الاحتراف',
       description: 'كورس شامل لتعلم لغة JavaScript من البداية حتى المستوى المتقدم. يتضمن المفاهيم الأساسية والبرمجة الكائنية والبرمجة غير المتزامنة.',
-      categoryId: categories[2].id, // البرمجة
+      categoryId: categories[2].id,
       userId: admin.id,
       duration: 7200,
       views: 15420,

@@ -3,8 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 model User {
@@ -17,7 +16,7 @@ model User {
   role          String    @default("user")
   isBanned      Boolean   @default(false)
   emailVerified Boolean   @default(false)
-  
+
   videos        Video[]
   comments      Comment[]
   likes         Like[]
@@ -29,7 +28,7 @@ model User {
   orders        Order[]
   activities    Activity[]
   courses       Course[]
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -43,10 +42,10 @@ model Category {
   color       String?
   order       Int       @default(0)
   isActive    Boolean   @default(true)
-  
+
   videos      Video[]
   courses     Course[]
-  
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -55,10 +54,10 @@ model Tag {
   id        String   @id @default(cuid())
   name      String   @unique
   slug      String   @unique
-  
+
   videoTags  VideoTag[]
   courseTags CourseTag[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -68,7 +67,7 @@ model VideoTag {
   video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
   tagId   String
   tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  
+
   @@unique([videoId, tagId])
 }
 
@@ -77,7 +76,7 @@ model CourseTag {
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   tagId   String
   tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  
+
   @@unique([courseId, tagId])
 }
 
@@ -93,12 +92,12 @@ model Video {
   isFree          Boolean   @default(true)
   isPublished     Boolean   @default(false)
   isFeatured      Boolean   @default(false)
-  
+
   seekVideoId     String?   @unique
   seekStatus      String?
   seekPlayerId    String?
   embedUrl        String?
-  
+
   categoryId      String?
   category        Category? @relation(fields: [categoryId], references: [id])
   userId          String
@@ -110,7 +109,7 @@ model Video {
   watchHistory    WatchHistory[]
   videoTags       VideoTag[]
   lesson          Lesson?
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -126,7 +125,7 @@ model Course {
   level           String    @default("beginner")
   isPublished     Boolean   @default(false)
   isFeatured      Boolean   @default(false)
-  
+
   categoryId      String?
   category        Category? @relation(fields: [categoryId], references: [id])
   userId          String
@@ -134,7 +133,7 @@ model Course {
   lessons         Lesson[]
   enrollments     Enrollment[]
   courseTags      CourseTag[]
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -150,7 +149,7 @@ model Lesson {
   courseId    String
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   isFree      Boolean  @default(false)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -164,10 +163,10 @@ model Enrollment {
   progress    Float    @default(0)
   lastLessonId String?
   isCompleted Boolean  @default(false)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([userId, courseId])
 }
 
@@ -175,7 +174,7 @@ model Comment {
   id        String    @id @default(cuid())
   content   String
   isReported Boolean  @default(false)
-  
+
   userId    String
   user      User      @relation(fields: [userId], references: [id])
   videoId   String?
@@ -184,7 +183,7 @@ model Comment {
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
   likes     Like[]
-  
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -198,7 +197,7 @@ model Like {
   video     Video?   @relation(fields: [videoId], references: [id])
   commentId String?
   comment   Comment? @relation(fields: [commentId], references: [id])
-  
+
   createdAt DateTime @default(now())
 }
 
@@ -208,9 +207,9 @@ model SavedVideo {
   user      User     @relation(fields: [userId], references: [id])
   videoId   String
   video     Video    @relation(fields: [videoId], references: [id])
-  
+
   createdAt DateTime @default(now())
-  
+
   @@unique([userId, videoId])
 }
 
@@ -221,9 +220,9 @@ model Rating {
   user      User     @relation(fields: [userId], references: [id])
   videoId   String
   video     Video    @relation(fields: [videoId], references: [id])
-  
+
   createdAt DateTime @default(now())
-  
+
   @@unique([userId, videoId])
 }
 
@@ -235,10 +234,10 @@ model WatchHistory {
   video     Video    @relation(fields: [videoId], references: [id])
   progress  Float    @default(0)
   lastPosition Int   @default(0)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([userId, videoId])
 }
 
@@ -249,10 +248,10 @@ model Notification {
   type      String   @default("info")
   isRead    Boolean  @default(false)
   link      String?
-  
+
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
 }
 
@@ -263,11 +262,11 @@ model Order {
   status          String   @default("pending")
   paymentMethod   String?
   paymentId       String?
-  
+
   userId          String
   user            User     @relation(fields: [userId], references: [id])
   courseId        String?
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -276,10 +275,10 @@ model Activity {
   id        String   @id @default(cuid())
   type      String
   metadata  String?
-  
+
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
 }
 
