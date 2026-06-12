@@ -7,6 +7,7 @@ interface VideoData {
   id: string
   title: string
   slug: string
+  shareCode: string
   description: string | null
   thumbnail: string | null
   duration: number

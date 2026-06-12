@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { resolveVideoId } from '@/lib/video-utils'
 
 export async function POST(
   request: NextRequest,
@@ -11,7 +12,15 @@ export async function POST(
       return NextResponse.json({ error: 'غير مصرح به' }, { status: 401 })
     }
 
-    const { id: videoId } = await params
+    const { id: identifier } = await params
+    const videoId = await resolveVideoId(identifier)
+    if (!videoId) {
+      return NextResponse.json(
+        { error: 'الفيديو غير موجود' },
+        { status: 404 }
+      )
+    }
+
     const body = await request.json()
     const type = body.type || 'like'
 
@@ -19,14 +28,6 @@ export async function POST(
       return NextResponse.json(
         { error: 'نوع غير صالح' },
         { status: 400 }
-      )
-    }
-
-    const video = await db.video.findUnique({ where: { id: videoId } })
-    if (!video) {
-      return NextResponse.json(
-        { error: 'الفيديو غير موجود' },
-        { status: 404 }
       )
     }
 

@@ -39,18 +39,34 @@ export const useAppStore = create<AppState>()((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveCategory: (category) => set({ activeCategory: category }),
 
-  navigateToVideo: (id) =>
-    set({ currentView: 'video', selectedVideoId: id }),
-  navigateToCourse: (id) =>
-    set({ currentView: 'course', selectedCourseId: id }),
+  navigateToVideo: (id) => {
+    set({ currentView: 'video', selectedVideoId: id })
+    // Update browser URL to YouTube-style ?v=SHARECODE
+    const url = new URL(window.location.href)
+    url.searchParams.set('v', id)
+    url.searchParams.delete('c')
+    window.history.pushState({}, '', url.toString())
+  },
+  navigateToCourse: (id) => {
+    set({ currentView: 'course', selectedCourseId: id })
+    const url = new URL(window.location.href)
+    url.searchParams.set('c', id)
+    url.searchParams.delete('v')
+    window.history.pushState({}, '', url.toString())
+  },
   navigateToSearch: (query) =>
     set({ currentView: 'search', searchQuery: query }),
-  goHome: () =>
+  goHome: () => {
     set({
       currentView: 'home',
       selectedVideoId: null,
       selectedCourseId: null,
       searchQuery: '',
       activeCategory: null,
-    }),
+    })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('v')
+    url.searchParams.delete('c')
+    window.history.pushState({}, '', url.toString())
+  },
 }))

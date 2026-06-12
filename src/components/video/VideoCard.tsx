@@ -53,6 +53,9 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
   const navigateToVideo = useAppStore((s) => s.navigateToVideo)
   const pattern = thumbnailPatterns[index % thumbnailPatterns.length]
 
+  // Use shareCode for navigation (YouTube-style URL), fallback to id
+  const videoIdentifier = video.shareCode || video.id
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -61,7 +64,7 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
       <div
-        onClick={() => navigateToVideo(video.id)}
+        onClick={() => navigateToVideo(videoIdentifier)}
         className="group cursor-pointer card-aurora overflow-hidden"
       >
         {/* Thumbnail */}

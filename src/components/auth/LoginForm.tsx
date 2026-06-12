@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Loader2, Mail, Lock, User, Sparkles } from 'lucide-react'
+import { Loader2, Mail, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -109,16 +109,6 @@ export default function LoginForm() {
             >
               سجل الآن
             </button>
-          </div>
-
-          {/* Demo credentials */}
-          <div className="mt-4 p-3 rounded-xl bg-[oklch(0.627_0.265_303.9_/_0.08)] border border-[oklch(0.627_0.265_303.9_/_0.15)] text-xs text-[oklch(0.727_0.165_303.9)]">
-            <p className="font-medium mb-1 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              بيانات تجريبية:
-            </p>
-            <p>البريد: admin@vidverse.com</p>
-            <p>كلمة المرور: password123</p>
           </div>
         </CardContent>
       </Card>

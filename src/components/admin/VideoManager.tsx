@@ -15,6 +15,7 @@ interface AdminVideo {
   id: string
   title: string
   slug: string
+  shareCode: string
   views: number
   isFree: boolean
   isPublished: boolean
@@ -114,7 +115,7 @@ export default function VideoManager() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-lg hover:bg-[oklch(0.18_0.03_280)]"
-                    onClick={() => navigateToVideo(video.id)}
+                    onClick={() => navigateToVideo(video.shareCode || video.id)}
                   >
                     <Eye className="h-4 w-4 text-[oklch(0.55_0.04_280)]" />
                   </Button>

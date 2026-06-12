@@ -84,6 +84,7 @@ model Video {
   id              String    @id @default(cuid())
   title           String
   slug            String    @unique
+  shareCode       String    @unique @default("pending")
   description     String?
   thumbnail       String?
   duration        Int       @default(0)

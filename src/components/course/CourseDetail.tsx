@@ -139,7 +139,7 @@ export default function CourseDetail() {
                   <button
                     onClick={() => {
                       if (lesson.video && (lesson.isFree || isEnrolled)) {
-                        navigateToVideo(lesson.video.id)
+                        navigateToVideo(lesson.video.shareCode || lesson.video.id)
                       }
                     }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[oklch(0.18_0.03_280)] transition-colors group"

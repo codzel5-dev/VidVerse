@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { Prisma } from '@prisma/client'
+import crypto from 'crypto'
+
+const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+function generateShareCode(): string {
+  const bytes = crypto.randomBytes(8)
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += CHARSET[bytes[i] % CHARSET.length]
+  }
+  return code
+}
+
+async function generateUniqueShareCode(): Promise<string> {
+  let code = generateShareCode()
+  let attempts = 0
+  while (attempts < 100) {
+    const existing = await db.video.findUnique({ where: { shareCode: code } })
+    if (!existing) return code
+    code = generateShareCode()
+    attempts++
+  }
+  return generateShareCode() + Date.now().toString(36).slice(-4)
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -119,10 +143,13 @@ export async function POST(request: NextRequest) {
       .replace(/\s+/g, '-')
       .concat('-', Date.now().toString(36))
 
+    const shareCode = await generateUniqueShareCode()
+
     const video = await db.video.create({
       data: {
         title,
         slug,
+        shareCode,
         description,
         thumbnail,
         duration: duration || 0,

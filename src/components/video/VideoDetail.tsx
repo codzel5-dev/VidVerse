@@ -133,7 +133,14 @@ export default function VideoDetail() {
   }
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href)
+    // Use shareCode for YouTube-style URL
+    const shareCode = video?.shareCode
+    if (shareCode) {
+      const shareUrl = `${window.location.origin}/?v=${shareCode}`
+      navigator.clipboard.writeText(shareUrl)
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+    }
     toast.success('تم نسخ الرابط')
   }
 
@@ -184,6 +191,19 @@ export default function VideoDetail() {
                 <MessageCircle className="h-4 w-4" />
                 {video._count?.comments || 0} تعليق
               </span>
+              {video.shareCode && (
+                <span
+                  className="flex items-center gap-1 cursor-pointer hover:text-[oklch(0.827_0.165_303.9)] transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/?v=${video.shareCode}`)
+                    toast.success('تم نسخ رابط الفيديو')
+                  }}
+                  title="انقر لنسخ الرابط"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span className="font-mono text-xs" dir="ltr">{video.shareCode}</span>
+                </span>
+              )}
               {video.category && (
                 <Badge className="badge-aurora rounded-lg border-0">
                   {video.category.name}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -102,7 +103,62 @@ function ViewRenderer({ data }: { data: InitialData }) {
 }
 
 export default function HomeClient({ initialData }: { initialData: InitialData }) {
-  _initialData = initialData
+  // Store initial data for access by child components
+  useEffect(() => {
+    _initialData = initialData
+  }, [initialData])
+
+  const setView = useAppStore((s) => s.setView)
+  const setSelectedVideoId = useAppStore((s) => s.setSelectedVideoId)
+  const setSelectedCourseId = useAppStore((s) => s.setSelectedCourseId)
+  const setSearchQuery = useAppStore((s) => s.setSearchQuery)
+
+  // Initialize from URL parameters on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const videoCode = params.get('v')
+    const courseCode = params.get('c')
+    const search = params.get('q')
+
+    if (videoCode) {
+      setSelectedVideoId(videoCode)
+      setView('video')
+    } else if (courseCode) {
+      setSelectedCourseId(courseCode)
+      setView('course')
+    } else if (search) {
+      setSearchQuery(search)
+      setView('search')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      const videoCode = params.get('v')
+      const courseCode = params.get('c')
+      const search = params.get('q')
+
+      if (videoCode) {
+        setSelectedVideoId(videoCode)
+        setView('video')
+      } else if (courseCode) {
+        setSelectedCourseId(courseCode)
+        setView('course')
+      } else if (search) {
+        setSearchQuery(search)
+        setView('search')
+      } else {
+        setView('home')
+        setSelectedVideoId(null)
+        setSelectedCourseId(null)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen flex flex-col bg-background cosmic-stars">

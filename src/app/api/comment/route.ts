@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { resolveVideoId } from '@/lib/video-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { content, videoId, parentId } = body
+    const { content, videoId: rawVideoId, parentId } = body
 
     if (!content) {
       return NextResponse.json(
@@ -18,15 +19,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!videoId) {
+    if (!rawVideoId) {
       return NextResponse.json(
         { error: 'معرف الفيديو مطلوب' },
         { status: 400 }
       )
     }
 
-    const video = await db.video.findUnique({ where: { id: videoId } })
-    if (!video) {
+    // Resolve shareCode to actual video ID
+    const videoId = await resolveVideoId(rawVideoId)
+    if (!videoId) {
       return NextResponse.json(
         { error: 'الفيديو غير موجود' },
         { status: 404 }

@@ -8,8 +8,9 @@ export async function GET(
   try {
     const { id } = await params
 
-    const video = await db.video.findUnique({
-      where: { id },
+    // Try to find by shareCode first (YouTube-style), then by regular id
+    let video = await db.video.findUnique({
+      where: { shareCode: id },
       include: {
         user: {
           select: { id: true, name: true, avatar: true, bio: true },
@@ -46,6 +47,48 @@ export async function GET(
         },
       },
     })
+
+    // Fallback to regular id lookup
+    if (!video) {
+      video = await db.video.findUnique({
+        where: { id },
+        include: {
+          user: {
+            select: { id: true, name: true, avatar: true, bio: true },
+          },
+          category: {
+            select: { id: true, name: true, slug: true },
+          },
+          videoTags: {
+            include: {
+              tag: { select: { id: true, name: true, slug: true } },
+            },
+          },
+          comments: {
+            where: { parentId: null },
+            include: {
+              user: { select: { id: true, name: true, avatar: true } },
+              replies: {
+                include: {
+                  user: { select: { id: true, name: true, avatar: true } },
+                  likes: true,
+                },
+                orderBy: { createdAt: 'asc' },
+              },
+              likes: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+          likes: true,
+          ratings: {
+            select: { score: true },
+          },
+          _count: {
+            select: { likes: true, comments: true, savedBy: true },
+          },
+        },
+      })
+    }
 
     if (!video) {
       return NextResponse.json(
