@@ -52,20 +52,37 @@ function AnimatedCounter({ target, duration = 2000 }: { target: number; duration
 
 // Floating particles component
 function FloatingParticles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    delay: Math.random() * 5,
-    duration: Math.random() * 4 + 4,
-    color: [
-      'oklch(0.627 0.265 303.9 / 0.3)',
-      'oklch(0.715 0.183 192.5 / 0.3)',
-      'oklch(0.645 0.246 16.4 / 0.2)',
-      'oklch(0.755 0.183 68.5 / 0.2)',
-    ][i % 4],
-  }))
+  const [mounted, setMounted] = useState(false)
+  const [particles, setParticles] = useState<Array<{
+    id: number
+    size: number
+    x: number
+    y: number
+    delay: number
+    duration: number
+    color: string
+  }>>([])
+
+  useEffect(() => {
+    const generated = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      size: Math.random() * 4 + 2,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: Math.random() * 4 + 4,
+      color: [
+        'oklch(0.627 0.265 303.9 / 0.3)',
+        'oklch(0.715 0.183 192.5 / 0.3)',
+        'oklch(0.645 0.246 16.4 / 0.2)',
+        'oklch(0.755 0.183 68.5 / 0.2)',
+      ][i % 4],
+    }))
+    setParticles(generated)
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return <div className="absolute inset-0 overflow-hidden pointer-events-none" />
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
