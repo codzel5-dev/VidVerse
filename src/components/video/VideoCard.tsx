@@ -1,8 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Clock, Eye } from 'lucide-react'
-import { Card } from '@/components/ui/card'
+import { Clock, Eye, Play } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import StarRating from '@/components/common/StarRating'
@@ -40,14 +39,14 @@ function timeAgo(date: string): string {
   return 'الآن'
 }
 
-// Thumbnail gradient patterns by index
+// Aurora gradient patterns by index
 const thumbnailPatterns = [
-  'from-emerald-400 via-teal-400 to-cyan-400',
-  'from-amber-400 via-orange-400 to-rose-400',
-  'from-violet-400 via-purple-400 to-fuchsia-400',
-  'from-sky-400 via-blue-400 to-indigo-400',
-  'from-lime-400 via-green-400 to-emerald-400',
-  'from-rose-400 via-pink-400 to-red-400',
+  'from-[oklch(0.627_0.265_303.9)] via-[oklch(0.715_0.183_192.5)] to-[oklch(0.696_0.17_162.48)]',
+  'from-[oklch(0.645_0.246_16.4)] via-[oklch(0.755_0.183_68.5)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.656_0.241_354.3)] via-[oklch(0.627_0.265_303.9)] to-[oklch(0.623_0.214_259.8)]',
+  'from-[oklch(0.715_0.183_192.5)] via-[oklch(0.696_0.17_162.48)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.696_0.17_162.48)] via-[oklch(0.715_0.183_192.5)] to-[oklch(0.645_0.246_16.4)]',
+  'from-[oklch(0.623_0.214_259.8)] via-[oklch(0.627_0.265_303.9)] to-[oklch(0.656_0.241_354.3)]',
 ]
 
 export default function VideoCard({ video, index = 0 }: VideoCardProps) {
@@ -61,59 +60,61 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
-      <Card
+      <div
         onClick={() => navigateToVideo(video.id)}
-        className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white card-hover rounded-2xl"
+        className="group cursor-pointer card-aurora overflow-hidden"
       >
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-80`} />
+          <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-70 group-hover:opacity-90 transition-opacity duration-500`} />
+          
+          {/* Grid overlay pattern */}
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+            backgroundSize: '20px 20px'
+          }} />
+          
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <svg className="h-6 w-6 text-white fill-white" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-125 group-hover:bg-white/30 transition-all duration-500 border border-white/20">
+              <Play className="h-6 w-6 text-white fill-white ml-0.5" />
             </div>
           </div>
 
           {/* Duration badge */}
-          <Badge
-            variant="secondary"
-            className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded-lg border-0"
-          >
-            <Clock className="h-3 w-3 ml-1" />
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg">
+            <Clock className="h-3 w-3" />
             {formatDuration(video.duration)}
-          </Badge>
+          </div>
 
           {/* Free/Paid badge */}
           {video.isFree ? (
-            <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-xs rounded-lg border-0">
+            <div className="absolute top-2 right-2 badge-free text-xs rounded-lg px-2 py-1">
               مجاني
-            </Badge>
+            </div>
           ) : (
-            <Badge className="absolute top-2 right-2 bg-amber-500 text-white text-xs rounded-lg border-0">
+            <div className="absolute top-2 right-2 badge-premium text-xs rounded-lg px-2 py-1">
               مدفوع
-            </Badge>
+            </div>
           )}
         </div>
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-stone-800 line-clamp-2 mb-2 group-hover:text-emerald-700 transition-colors">
+          <h3 className="font-semibold text-white line-clamp-2 mb-2.5 group-hover:text-gradient-aurora transition-all duration-300">
             {video.title}
           </h3>
 
-          <div className="flex items-center gap-2 mb-2">
-            <Avatar className="h-6 w-6 border border-stone-200">
-              <AvatarFallback className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Avatar className="h-6 w-6 border border-[oklch(0.627_0.265_303.9_/_0.3)]">
+              <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] text-[10px] font-semibold">
                 {video.user?.name?.charAt(0) || 'م'}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">{video.user?.name || 'مجهول'}</span>
+            <span className="text-xs text-[oklch(0.55_0.04_280)]">{video.user?.name || 'مجهول'}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-[oklch(0.5_0.03_280)]">
               <span className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
                 {formatViews(video.views)}
@@ -127,12 +128,14 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
 
           {/* Category badge */}
           {video.category && (
-            <Badge variant="secondary" className="mt-2 text-xs rounded-lg bg-stone-100 text-stone-600">
-              {video.category.name}
-            </Badge>
+            <div className="mt-3">
+              <Badge variant="secondary" className="text-xs rounded-lg bg-[oklch(0.627_0.265_303.9_/_0.1)] text-[oklch(0.827_0.165_303.9)] border-[oklch(0.627_0.265_303.9_/_0.2)] hover:bg-[oklch(0.627_0.265_303.9_/_0.15)]">
+                {video.category.name}
+              </Badge>
+            </div>
           )}
         </div>
-      </Card>
+      </div>
     </motion.div>
   )
 }

@@ -11,7 +11,6 @@ import {
   GraduationCap,
   Gamepad2,
 } from 'lucide-react'
-import { Card } from '@/components/ui/card'
 import { useAppStore } from '@/store/app-store'
 
 const categoryIcons: Record<string, typeof Film> = {
@@ -31,15 +30,15 @@ const categoryIcons: Record<string, typeof Film> = {
   default: Film,
 }
 
-const categoryColors = [
-  'from-emerald-400 to-teal-500',
-  'from-amber-400 to-orange-500',
-  'from-rose-400 to-pink-500',
-  'from-violet-400 to-purple-500',
-  'from-cyan-400 to-sky-500',
-  'from-lime-400 to-green-500',
-  'from-fuchsia-400 to-pink-500',
-  'from-indigo-400 to-violet-500',
+const categoryGradients = [
+  'from-[oklch(0.627_0.265_303.9)] to-[oklch(0.715_0.183_192.5)]',
+  'from-[oklch(0.645_0.246_16.4)] to-[oklch(0.755_0.183_68.5)]',
+  'from-[oklch(0.656_0.241_354.3)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.715_0.183_192.5)] to-[oklch(0.696_0.17_162.48)]',
+  'from-[oklch(0.696_0.17_162.48)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.755_0.183_68.5)] to-[oklch(0.645_0.246_16.4)]',
+  'from-[oklch(0.623_0.214_259.8)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.627_0.265_303.9)] to-[oklch(0.656_0.241_354.3)]',
 ]
 
 interface CategorySectionProps {
@@ -56,17 +55,17 @@ export default function CategorySection({ initialCategories = [] }: CategorySect
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="mb-6"
+        className="mb-8"
       >
-        <h2 className="text-2xl font-bold text-stone-800">تصفح التصنيفات</h2>
-        <p className="text-sm text-muted-foreground mt-1">اختر التصنيف الذي يهمك</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">تصفح التصنيفات</h2>
+        <p className="text-sm text-[oklch(0.55_0.04_280)] mt-1.5">اختر التصنيف الذي يهمك</p>
       </motion.div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {categories.map((category, index) => {
           const slug = category.slug || 'default'
           const Icon = categoryIcons[slug] || categoryIcons.default
-          const colorClass = categoryColors[index % categoryColors.length]
+          const gradientClass = categoryGradients[index % categoryGradients.length]
 
           return (
             <motion.div
@@ -75,21 +74,26 @@ export default function CategorySection({ initialCategories = [] }: CategorySect
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Card
+              <div
                 onClick={() => navigateToSearch(category.name)}
-                className="cursor-pointer border-0 shadow-sm overflow-hidden bg-white card-hover rounded-2xl"
+                className="cursor-pointer overflow-hidden glass-card rounded-2xl group hover:border-[oklch(0.627_0.265_303.9_/_0.3)] transition-all duration-300"
               >
-                <div className={`relative h-28 flex flex-col items-center justify-center bg-gradient-to-br ${colorClass} p-4`}>
-                  <Icon className="h-8 w-8 text-white/90 mb-2" />
-                  <h3 className="text-white font-semibold text-sm">{category.name}</h3>
-                  <span className="text-white/70 text-xs mt-1">
+                <div className={`relative h-28 flex flex-col items-center justify-center bg-gradient-to-br ${gradientClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300 p-4`}>
+                  {/* Grid overlay */}
+                  <div className="absolute inset-0 opacity-10" style={{
+                    backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+                    backgroundSize: '15px 15px'
+                  }} />
+                  <Icon className="h-8 w-8 text-white/90 mb-2 relative z-10" />
+                  <h3 className="text-white font-semibold text-sm relative z-10">{category.name}</h3>
+                  <span className="text-white/70 text-xs mt-1 relative z-10">
                     {category._count.videos} فيديو
                   </span>
                 </div>
-              </Card>
+              </div>
             </motion.div>
           )
         })}

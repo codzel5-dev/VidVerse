@@ -142,8 +142,8 @@ export default function VideoDetail() {
   if (!video) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground mb-4">الفيديو غير موجود</p>
-        <Button onClick={goHome} className="rounded-2xl gradient-emerald-teal text-white border-0">
+        <p className="text-[oklch(0.55_0.04_280)] mb-4">الفيديو غير موجود</p>
+        <Button onClick={goHome} className="rounded-2xl btn-aurora text-white border-0">
           العودة للرئيسية
         </Button>
       </div>
@@ -168,10 +168,10 @@ export default function VideoDetail() {
 
           {/* Title & Info */}
           <div>
-            <h1 className="text-2xl font-bold text-stone-800 mb-3">{video.title}</h1>
+            <h1 className="text-2xl font-bold text-white mb-3">{video.title}</h1>
 
             {/* Stats row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-[oklch(0.55_0.04_280)] mb-4">
               <span className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
                 {video.views.toLocaleString('ar-EG')} مشاهدة
@@ -185,14 +185,14 @@ export default function VideoDetail() {
                 {video._count?.comments || 0} تعليق
               </span>
               {video.category && (
-                <Badge variant="secondary" className="rounded-lg bg-emerald-50 text-emerald-700">
+                <Badge className="badge-aurora rounded-lg border-0">
                   {video.category.name}
                 </Badge>
               )}
               {video.isFree ? (
-                <Badge className="bg-emerald-100 text-emerald-700 border-0 rounded-lg">مجاني</Badge>
+                <Badge className="badge-free border-0 rounded-lg">مجاني</Badge>
               ) : (
-                <Badge className="bg-amber-100 text-amber-700 border-0 rounded-lg">مدفوع</Badge>
+                <Badge className="badge-premium border-0 rounded-lg">مدفوع</Badge>
               )}
             </div>
 
@@ -202,7 +202,7 @@ export default function VideoDetail() {
                 variant={isLiked ? 'default' : 'outline'}
                 size="sm"
                 onClick={handleLike}
-                className={`rounded-xl ${isLiked ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                className={`rounded-xl border-[oklch(0.25_0.04_280)] ${isLiked ? 'bg-[oklch(0.627_0.265_303.9)] hover:bg-[oklch(0.55_0.265_303.9)] text-white' : 'text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.13_0.028_280)] hover:text-white'}`}
               >
                 <ThumbsUp className="h-4 w-4 ml-1" />
                 {likeCount}
@@ -211,7 +211,7 @@ export default function VideoDetail() {
                 variant={isDisliked ? 'default' : 'outline'}
                 size="sm"
                 onClick={handleDislike}
-                className={`rounded-xl ${isDisliked ? 'bg-rose-600 hover:bg-rose-700' : ''}`}
+                className={`rounded-xl border-[oklch(0.25_0.04_280)] ${isDisliked ? 'bg-[oklch(0.645_0.246_16.4)] hover:bg-[oklch(0.58_0.246_16.4)] text-white' : 'text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.13_0.028_280)] hover:text-white'}`}
               >
                 <ThumbsDown className="h-4 w-4 ml-1" />
                 {dislikeCount}
@@ -220,12 +220,12 @@ export default function VideoDetail() {
                 variant={isSaved ? 'default' : 'outline'}
                 size="sm"
                 onClick={handleSave}
-                className={`rounded-xl ${isSaved ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+                className={`rounded-xl border-[oklch(0.25_0.04_280)] ${isSaved ? 'bg-[oklch(0.755_0.183_68.5)] hover:bg-[oklch(0.68_0.183_68.5)] text-white' : 'text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.13_0.028_280)] hover:text-white'}`}
               >
                 <Bookmark className={`h-4 w-4 ml-1 ${isSaved ? 'fill-white' : ''}`} />
                 حفظ
               </Button>
-              <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl">
+              <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl border-[oklch(0.25_0.04_280)] text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.13_0.028_280)] hover:text-white">
                 <Share2 className="h-4 w-4 ml-1" />
                 مشاركة
               </Button>
@@ -233,15 +233,15 @@ export default function VideoDetail() {
           </div>
 
           {/* Rating */}
-          <Card className="p-4 rounded-2xl border-0 shadow-sm">
+          <Card className="glass-card card-aurora p-4 rounded-2xl border-[oklch(0.25_0.04_280)]">
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-emerald-600">{avgRating.toFixed(1)}</div>
+                <div className="text-3xl font-bold text-gradient-aurora">{avgRating.toFixed(1)}</div>
                 <StarRating rating={avgRating} size="sm" />
               </div>
-              <Separator orientation="vertical" className="h-12" />
+              <Separator orientation="vertical" className="h-12 bg-[oklch(0.25_0.04_280)]" />
               <div>
-                <p className="text-sm text-muted-foreground mb-1">قيم هذا الفيديو</p>
+                <p className="text-sm text-[oklch(0.55_0.04_280)] mb-1">قيم هذا الفيديو</p>
                 <StarRating
                   rating={userRating}
                   size="lg"
@@ -254,25 +254,25 @@ export default function VideoDetail() {
 
           {/* Description */}
           {video.description && (
-            <Card className="p-4 rounded-2xl border-0 shadow-sm">
-              <h3 className="font-semibold text-stone-800 mb-2">الوصف</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+            <Card className="glass-card card-aurora p-4 rounded-2xl border-[oklch(0.25_0.04_280)]">
+              <h3 className="font-semibold text-white mb-2">الوصف</h3>
+              <p className="text-sm text-[oklch(0.7_0.04_280)] leading-relaxed whitespace-pre-line">
                 {video.description}
               </p>
             </Card>
           )}
 
           {/* Comments */}
-          <Card className="p-4 rounded-2xl border-0 shadow-sm">
-            <h3 className="font-semibold text-stone-800 mb-4">
+          <Card className="glass-card card-aurora p-4 rounded-2xl border-[oklch(0.25_0.04_280)]">
+            <h3 className="font-semibold text-white mb-4">
               التعليقات ({video.comments?.length || 0})
             </h3>
 
             {/* Add comment */}
             {user && (
               <div className="flex gap-3 mb-6">
-                <Avatar className="h-9 w-9 border border-stone-200">
-                  <AvatarFallback className="bg-emerald-50 text-emerald-700 text-sm font-semibold">
+                <Avatar className="h-9 w-9 border-[oklch(0.627_0.265_303.9_/_0.3)]">
+                  <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.627_0.265_303.9)] text-sm font-semibold">
                     {user.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
@@ -281,14 +281,14 @@ export default function VideoDetail() {
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="أضف تعليقاً..."
-                    className="rounded-xl min-h-[80px] resize-none"
+                    className="input-aurora rounded-xl min-h-[80px] resize-none bg-[oklch(0.08_0.02_280)] border-[oklch(0.25_0.04_280)] text-white placeholder:text-[oklch(0.55_0.04_280)]"
                   />
                   <div className="flex justify-end mt-2">
                     <Button
                       size="sm"
                       onClick={handleAddComment}
                       disabled={!commentText.trim()}
-                      className="rounded-xl gradient-emerald-teal text-white border-0"
+                      className="rounded-xl btn-aurora text-white border-0"
                     >
                       <Send className="h-4 w-4 ml-1" />
                       إرسال
@@ -304,17 +304,17 @@ export default function VideoDetail() {
                 const c = comment as { id: string; content: string; createdAt: string; user: { id: string; name: string; avatar: string | null }; replies: Record<string, unknown>[]; likes: unknown[] }
                 return (
                   <div key={c.id} className="flex gap-3">
-                    <Avatar className="h-8 w-8 border border-stone-200">
-                      <AvatarFallback className="bg-stone-100 text-stone-600 text-xs font-semibold">
+                    <Avatar className="h-8 w-8 border-[oklch(0.627_0.265_303.9_/_0.3)]">
+                      <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-xs font-semibold">
                         {c.user?.name?.charAt(0) || 'م'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-stone-700">{c.user?.name}</span>
-                        <span className="text-xs text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                        <span className="text-sm font-medium text-white">{c.user?.name}</span>
+                        <span className="text-xs text-[oklch(0.55_0.04_280)]">{timeAgo(c.createdAt)}</span>
                       </div>
-                      <p className="text-sm text-stone-600">{c.content}</p>
+                      <p className="text-sm text-[oklch(0.7_0.04_280)]">{c.content}</p>
                       {(c.replies || []).length > 0 && (
                         <div className="mt-3 mr-8 space-y-3">
                           {(c.replies || []).map((reply: Record<string, unknown>) => {
@@ -322,16 +322,16 @@ export default function VideoDetail() {
                             return (
                               <div key={r.id} className="flex gap-2">
                                 <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="bg-stone-100 text-stone-600 text-[10px]">
+                                  <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-[10px]">
                                     {r.user?.name?.charAt(0) || 'م'}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-stone-700">{r.user?.name}</span>
-                                    <span className="text-xs text-muted-foreground">{timeAgo(r.createdAt)}</span>
+                                    <span className="text-xs font-medium text-white">{r.user?.name}</span>
+                                    <span className="text-xs text-[oklch(0.55_0.04_280)]">{timeAgo(r.createdAt)}</span>
                                   </div>
-                                  <p className="text-xs text-stone-600">{r.content}</p>
+                                  <p className="text-xs text-[oklch(0.7_0.04_280)]">{r.content}</p>
                                 </div>
                               </div>
                             )
@@ -348,7 +348,7 @@ export default function VideoDetail() {
 
         {/* Sidebar - Related Videos */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-stone-800">فيديوهات ذات صلة</h3>
+          <h3 className="font-semibold text-white">فيديوهات ذات صلة</h3>
           <div className="space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
             {relatedVideos
               .filter((v) => v.id !== selectedVideoId)

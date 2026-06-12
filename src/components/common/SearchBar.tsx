@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/store/app-store'
 
@@ -33,7 +33,7 @@ export default function SearchBar() {
   return (
     <form onSubmit={handleSubmit} className="relative w-full max-w-md">
       <div className={`relative flex items-center transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}>
-        <Search className="absolute right-3 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute right-3 h-4 w-4 text-[oklch(0.55_0.04_280)]" />
         <Input
           ref={inputRef}
           value={query}
@@ -41,15 +41,15 @@ export default function SearchBar() {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="ابحث عن فيديو أو كورس..."
-          className="h-10 pr-10 pl-10 rounded-2xl bg-white/80 border-stone-200 focus:border-emerald-400 focus:ring-emerald-400/20 transition-all duration-300"
+          className="h-10 pr-10 pl-10 rounded-xl input-aurora text-white placeholder:text-[oklch(0.45_0.03_280)] focus:border-[oklch(0.627_0.265_303.9_/_0.5)] focus:shadow-[0_0_20px_oklch(0.627_0.265_303.9_/_0.1)]"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute left-3 p-0.5 rounded-full hover:bg-stone-100 transition-colors"
+            className="absolute left-3 p-0.5 rounded-full hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] transition-colors"
           >
-            <X className="h-3.5 w-3.5 text-muted-foreground" />
+            <X className="h-3.5 w-3.5 text-[oklch(0.55_0.04_280)]" />
           </button>
         )}
       </div>

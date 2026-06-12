@@ -21,9 +21,9 @@ export default function LoadingSpinner({ size = 'md', text }: LoadingSpinnerProp
       animate={{ opacity: 1 }}
       className="flex flex-col items-center justify-center py-12"
     >
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-emerald-600`} />
+      <Loader2 className={`${sizeClasses[size]} animate-spin text-[oklch(0.627_0.265_303.9)]`} />
       {text && (
-        <p className="mt-3 text-sm text-muted-foreground">{text}</p>
+        <p className="mt-3 text-sm text-[oklch(0.55_0.04_280)]">{text}</p>
       )}
     </motion.div>
   )

@@ -60,7 +60,7 @@ export default function UserManager() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{users.length} مستخدم</p>
+      <p className="text-sm text-[oklch(0.55_0.04_280)]">{users.length} مستخدم</p>
 
       <div className="space-y-3">
         {users.map((u, index) => (
@@ -70,29 +70,29 @@ export default function UserManager() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.03 }}
           >
-            <Card className="p-4 rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="glass-card p-4 rounded-2xl hover:border-[oklch(0.627_0.265_303.9_/_0.3)] transition-all duration-300">
               <div className="flex items-center gap-4">
-                <Avatar className="h-10 w-10 border-2 border-stone-200">
-                  <AvatarFallback className="bg-emerald-50 text-emerald-700 font-semibold">
+                <Avatar className="h-10 w-10 border-2 border-[oklch(0.25_0.04_280)]">
+                  <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.1)] text-[oklch(0.827_0.165_303.9)] font-semibold">
                     {u.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-stone-800">{u.name}</h4>
+                    <h4 className="font-medium text-white">{u.name}</h4>
                     {u.role === 'admin' && (
-                      <Badge className="bg-violet-100 text-violet-700 border-0 rounded-lg text-xs">
+                      <Badge className="badge-aurora border-0 rounded-lg text-xs">
                         <Shield className="h-3 w-3 ml-1" />
                         مشرف
                       </Badge>
                     )}
                     {u.isBanned && (
-                      <Badge className="bg-red-100 text-red-700 border-0 rounded-lg text-xs">محظور</Badge>
+                      <Badge className="bg-[oklch(0.645_0.246_16.4_/_0.15)] text-[oklch(0.745_0.166_16.4)] border border-[oklch(0.645_0.246_16.4_/_0.3)] rounded-lg text-xs">محظور</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{u.email}</p>
+                  <p className="text-xs text-[oklch(0.55_0.04_280)]">{u.email}</p>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 text-xs text-[oklch(0.55_0.04_280)]">
                   <span>{u._count.videos} فيديو</span>
                   <span>{u._count.enrollments} كورس</span>
                 </div>
@@ -101,10 +101,10 @@ export default function UserManager() {
                   size="sm"
                   onClick={() => handleToggleBan(u.id, u.isBanned)}
                   disabled={u.role === 'admin'}
-                  className={`rounded-xl text-xs ${
+                  className={`rounded-xl text-xs border-[oklch(0.25_0.04_280)] bg-transparent ${
                     u.isBanned
-                      ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                      : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                      ? 'text-[oklch(0.796_0.13_162.48)] hover:text-[oklch(0.896_0.13_162.48)] hover:bg-[oklch(0.696_0.17_162.48_/_0.1)] hover:border-[oklch(0.696_0.17_162.48_/_0.3)]'
+                      : 'text-[oklch(0.745_0.166_16.4)] hover:text-[oklch(0.845_0.166_16.4)] hover:bg-[oklch(0.645_0.246_16.4_/_0.1)] hover:border-[oklch(0.645_0.246_16.4_/_0.3)]'
                   }`}
                 >
                   {u.isBanned ? (

@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { useCourses, type CourseData } from '@/hooks/useCourses'
 import CourseCard from './CourseCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
@@ -21,10 +22,15 @@ export default function CourseGrid({ courses: propCourses, loading: propLoading 
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+    >
       {courses.map((course, index) => (
         <CourseCard key={course.id} course={course} index={index} />
       ))}
-    </div>
+    </motion.div>
   )
 }

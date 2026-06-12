@@ -45,7 +45,7 @@ export default function CourseManager() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{courses.length} كورس</p>
+      <p className="text-sm text-[oklch(0.55_0.04_280)]">{courses.length} كورس</p>
 
       <div className="space-y-3">
         {courses.map((course, index) => (
@@ -55,14 +55,14 @@ export default function CourseManager() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.03 }}
           >
-            <Card className="p-4 rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="glass-card p-4 rounded-2xl hover:border-[oklch(0.627_0.265_303.9_/_0.3)] transition-all duration-300">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-14 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center shrink-0">
+                <div className="w-20 h-14 rounded-xl bg-gradient-to-br from-[oklch(0.627_0.265_303.9)] to-[oklch(0.656_0.241_354.3)] flex items-center justify-center shrink-0">
                   <BookOpen className="h-6 w-6 text-white/60" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-stone-800 line-clamp-1">{course.title}</h4>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <h4 className="font-medium text-white line-clamp-1">{course.title}</h4>
+                  <div className="flex items-center gap-2 text-xs text-[oklch(0.55_0.04_280)] mt-1">
                     <span>{course.user?.name}</span>
                     <span>•</span>
                     <span>{course._count.lessons} درس</span>
@@ -71,24 +71,24 @@ export default function CourseManager() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge className="bg-stone-100 text-stone-600 border-0 rounded-lg text-xs">
+                  <Badge className="bg-[oklch(0.18_0.03_280)] text-[oklch(0.7_0.04_280)] border border-[oklch(0.25_0.04_280)] rounded-lg text-xs">
                     {levelLabels[course.level] || course.level}
                   </Badge>
                   {course.price > 0 ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 border-0 rounded-lg text-xs">
+                    <Badge className="badge-premium border-0 rounded-lg text-xs">
                       <DollarSign className="h-3 w-3 ml-0.5" />${course.price}
                     </Badge>
                   ) : (
-                    <Badge className="bg-sky-100 text-sky-700 border-0 rounded-lg text-xs">مجاني</Badge>
+                    <Badge className="badge-free border-0 rounded-lg text-xs">مجاني</Badge>
                   )}
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-lg shrink-0"
+                  className="h-8 w-8 rounded-lg shrink-0 hover:bg-[oklch(0.18_0.03_280)]"
                   onClick={() => navigateToCourse(course.id)}
                 >
-                  <Eye className="h-4 w-4 text-stone-500" />
+                  <Eye className="h-4 w-4 text-[oklch(0.55_0.04_280)]" />
                 </Button>
               </div>
             </Card>
@@ -97,7 +97,7 @@ export default function CourseManager() {
       </div>
 
       {courses.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">لا توجد كورسات</div>
+        <div className="text-center py-8 text-[oklch(0.55_0.04_280)]">لا توجد كورسات</div>
       )}
     </div>
   )

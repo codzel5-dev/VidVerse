@@ -23,19 +23,19 @@ export default function EmptyState({ title, description, icon = 'film', action }
       transition={{ duration: 0.4 }}
       className="flex flex-col items-center justify-center py-16 px-4"
     >
-      <div className="w-20 h-20 rounded-3xl bg-stone-100 flex items-center justify-center mb-4">
-        <Icon className="h-10 w-10 text-stone-400" />
+      <div className="w-20 h-20 rounded-3xl bg-[oklch(0.627_0.265_303.9_/_0.1)] flex items-center justify-center mb-4">
+        <Icon className="h-10 w-10 text-[oklch(0.627_0.265_303.9_/_0.5)]" />
       </div>
-      <h3 className="text-lg font-semibold text-stone-700 mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
       {description && (
-        <p className="text-muted-foreground text-center max-w-sm mb-4">{description}</p>
+        <p className="text-[oklch(0.55_0.04_280)] text-center max-w-sm mb-4">{description}</p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="px-6 py-2.5 rounded-2xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+          className="btn-aurora px-6 py-2.5 rounded-2xl font-medium"
         >
-          {action.label}
+          <span>{action.label}</span>
         </button>
       )}
     </motion.div>

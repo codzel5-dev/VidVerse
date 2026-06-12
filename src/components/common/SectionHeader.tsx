@@ -17,18 +17,18 @@ export default function SectionHeader({ title, subtitle, onSeeAll, seeAllText = 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="flex items-center justify-between mb-6"
+      className="flex items-center justify-between mb-8"
     >
       <div>
-        <h2 className="text-2xl font-bold text-stone-800">{title}</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">{title}</h2>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-sm text-[oklch(0.55_0.04_280)] mt-1.5">{subtitle}</p>
         )}
       </div>
       {onSeeAll && (
         <button
           onClick={onSeeAll}
-          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium text-sm transition-colors group"
+          className="flex items-center gap-1.5 text-[oklch(0.827_0.165_303.9)] hover:text-[oklch(0.927_0.165_303.9)] font-medium text-sm transition-colors group"
         >
           <span>{seeAllText}</span>
           <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform rtl-flip" />

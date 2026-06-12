@@ -81,27 +81,27 @@ export default function SearchResults() {
       transition={{ duration: 0.4 }}
     >
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-800">
+        <h1 className="text-2xl font-bold text-white">
           نتائج البحث عن &quot;{searchQuery}&quot;
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">{totalResults} نتيجة</p>
+        <p className="text-sm text-[oklch(0.55_0.04_280)] mt-1">{totalResults} نتيجة</p>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="rounded-2xl bg-white border border-stone-200 p-1 h-auto">
-          <TabsTrigger value="all" className="rounded-xl data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+        <TabsList className="rounded-2xl bg-[oklch(0.13_0.028_280)] border border-[oklch(0.25_0.04_280)] p-1 h-auto">
+          <TabsTrigger value="all" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             الكل ({totalResults})
           </TabsTrigger>
-          <TabsTrigger value="videos" className="rounded-xl data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+          <TabsTrigger value="videos" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             <Video className="h-4 w-4 ml-1" />
             فيديوهات ({videos.length})
           </TabsTrigger>
-          <TabsTrigger value="courses" className="rounded-xl data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+          <TabsTrigger value="courses" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             <BookOpen className="h-4 w-4 ml-1" />
             كورسات ({courses.length})
           </TabsTrigger>
           {categories.length > 0 && (
-            <TabsTrigger value="categories" className="rounded-xl data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+            <TabsTrigger value="categories" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
               <Tag className="h-4 w-4 ml-1" />
               تصنيفات ({categories.length})
             </TabsTrigger>
@@ -111,8 +111,8 @@ export default function SearchResults() {
         <TabsContent value="all" className="mt-4 space-y-8">
           {videos.length > 0 && (
             <div>
-              <h3 className="font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                <Video className="h-5 w-5 text-emerald-600" />
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <Video className="h-5 w-5 text-[oklch(0.796_0.13_162.48)]" />
                 فيديوهات
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -124,8 +124,8 @@ export default function SearchResults() {
           )}
           {courses.length > 0 && (
             <div>
-              <h3 className="font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-emerald-600" />
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-[oklch(0.855_0.183_68.5)]" />
                 كورسات
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -167,15 +167,15 @@ export default function SearchResults() {
               <Card
                 key={cat.id}
                 onClick={() => navigateToSearch(cat.name)}
-                className="p-4 rounded-2xl border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow card-hover"
+                className="glass-card p-4 rounded-2xl cursor-pointer hover:border-[oklch(0.627_0.265_303.9_/_0.3)] transition-all duration-300 card-aurora"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl gradient-emerald-teal flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl gradient-aurora flex items-center justify-center">
                     <Tag className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-stone-800">{cat.name}</h4>
-                    <p className="text-xs text-muted-foreground">
+                    <h4 className="font-medium text-white">{cat.name}</h4>
+                    <p className="text-xs text-[oklch(0.55_0.04_280)]">
                       {cat._count.videos} فيديو • {cat._count.courses} كورس
                     </p>
                   </div>

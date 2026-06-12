@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { BookOpen, Users, Star, ChevronLeft } from 'lucide-react'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,10 +14,10 @@ interface CourseCardProps {
 }
 
 const coursePatterns = [
-  'from-violet-500 via-purple-500 to-fuchsia-500',
-  'from-amber-500 via-orange-500 to-rose-500',
-  'from-emerald-500 via-teal-500 to-cyan-500',
-  'from-sky-500 via-blue-500 to-indigo-500',
+  'from-[oklch(0.627_0.265_303.9)] via-[oklch(0.623_0.214_259.8)] to-[oklch(0.656_0.241_354.3)]',
+  'from-[oklch(0.645_0.246_16.4)] via-[oklch(0.755_0.183_68.5)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.696_0.17_162.48)] via-[oklch(0.715_0.183_192.5)] to-[oklch(0.627_0.265_303.9)]',
+  'from-[oklch(0.656_0.241_354.3)] via-[oklch(0.627_0.265_303.9)] to-[oklch(0.623_0.214_259.8)]',
 ]
 
 const levelLabels: Record<string, string> = {
@@ -27,10 +26,10 @@ const levelLabels: Record<string, string> = {
   advanced: 'متقدم',
 }
 
-const levelColors: Record<string, string> = {
-  beginner: 'bg-emerald-100 text-emerald-700',
-  intermediate: 'bg-amber-100 text-amber-700',
-  advanced: 'bg-rose-100 text-rose-700',
+const levelStyles: Record<string, string> = {
+  beginner: 'bg-[oklch(0.696_0.17_162.48_/_0.15)] text-[oklch(0.796_0.13_162.48)] border-[oklch(0.696_0.17_162.48_/_0.3)]',
+  intermediate: 'bg-[oklch(0.755_0.183_68.5_/_0.15)] text-[oklch(0.855_0.183_68.5)] border-[oklch(0.755_0.183_68.5_/_0.3)]',
+  advanced: 'bg-[oklch(0.645_0.246_16.4_/_0.15)] text-[oklch(0.745_0.166_16.4)] border-[oklch(0.645_0.246_16.4_/_0.3)]',
 }
 
 export default function CourseCard({ course, index = 0 }: CourseCardProps) {
@@ -44,43 +43,48 @@ export default function CourseCard({ course, index = 0 }: CourseCardProps) {
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
-      <Card
+      <div
         onClick={() => navigateToCourse(course.id)}
-        className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white card-hover rounded-2xl"
+        className="group cursor-pointer card-aurora overflow-hidden"
       >
         {/* Cover */}
         <div className="relative aspect-[16/10] overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-85`} />
+          <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-75 group-hover:opacity-95 transition-opacity duration-500`} />
+          {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+            backgroundSize: '18px 18px'
+          }} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <BookOpen className="h-12 w-12 text-white/40" />
+            <BookOpen className="h-12 w-12 text-white/30" />
           </div>
-          <Badge className={`absolute top-3 right-3 text-xs rounded-lg border-0 ${levelColors[course.level] || 'bg-stone-100 text-stone-600'}`}>
+          <div className={`absolute top-3 right-3 text-xs rounded-lg px-2 py-1 border ${levelStyles[course.level] || 'bg-[oklch(0.25_0.04_280)] text-[oklch(0.6_0.04_280)] border-[oklch(0.25_0.04_280)]'}`}>
             {levelLabels[course.level] || course.level}
-          </Badge>
+          </div>
           {course.isFeatured && (
-            <Badge className="absolute top-3 left-3 bg-amber-400 text-white text-xs rounded-lg border-0">
-              <Star className="h-3 w-3 ml-1 fill-white" />
+            <div className="absolute top-3 left-3 badge-premium text-xs rounded-lg px-2 py-1">
+              <Star className="h-3 w-3 ml-1 fill-current" />
               مميز
-            </Badge>
+            </div>
           )}
         </div>
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-stone-800 line-clamp-2 mb-2 group-hover:text-emerald-700 transition-colors">
+          <h3 className="font-semibold text-white line-clamp-2 mb-2.5 group-hover:text-gradient-aurora transition-all duration-300">
             {course.title}
           </h3>
 
           <div className="flex items-center gap-2 mb-3">
-            <Avatar className="h-6 w-6 border border-stone-200">
-              <AvatarFallback className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold">
+            <Avatar className="h-6 w-6 border border-[oklch(0.627_0.265_303.9_/_0.3)]">
+              <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] text-[10px] font-semibold">
                 {course.user?.name?.charAt(0) || 'م'}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">{course.user?.name || 'مجهول'}</span>
+            <span className="text-xs text-[oklch(0.55_0.04_280)]">{course.user?.name || 'مجهول'}</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+          <div className="flex items-center gap-4 text-xs text-[oklch(0.5_0.03_280)] mb-3">
             <span className="flex items-center gap-1">
               <BookOpen className="h-3.5 w-3.5" />
               {course._count.lessons} درس
@@ -91,25 +95,27 @@ export default function CourseCard({ course, index = 0 }: CourseCardProps) {
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-stone-100">
+          <div className="cosmic-divider mb-3" />
+
+          <div className="flex items-center justify-between pt-1">
             {course.price > 0 ? (
-              <span className="text-lg font-bold text-emerald-600">
+              <span className="text-lg font-bold text-gradient-coral-amber">
                 ${course.price}
               </span>
             ) : (
-              <Badge className="bg-emerald-100 text-emerald-700 border-0 rounded-lg">مجاني</Badge>
+              <Badge className="badge-free rounded-lg border">مجاني</Badge>
             )}
             <Button
               size="sm"
               variant="ghost"
-              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs"
+              className="text-[oklch(0.827_0.165_303.9)] hover:text-white hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] rounded-xl text-xs"
             >
               التفاصيل
               <ChevronLeft className="h-3 w-3 mr-1" />
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
     </motion.div>
   )
 }

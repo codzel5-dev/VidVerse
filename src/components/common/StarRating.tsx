@@ -48,16 +48,16 @@ export default function StarRating({
               className={cn(
                 sizeClasses[size],
                 'transition-colors',
-                filled && 'fill-amber-400 text-amber-400',
-                halfFilled && 'fill-amber-400/50 text-amber-400',
-                !filled && !halfFilled && 'fill-stone-200 text-stone-200'
+                filled && 'fill-[oklch(0.755_0.183_68.5)] text-[oklch(0.755_0.183_68.5)]',
+                halfFilled && 'fill-[oklch(0.755_0.183_68.5_/_0.5)] text-[oklch(0.755_0.183_68.5)]',
+                !filled && !halfFilled && 'fill-[oklch(0.25_0.04_280)] text-[oklch(0.25_0.04_280)]'
               )}
             />
           </button>
         )
       })}
       {showValue && (
-        <span className="text-sm font-medium text-muted-foreground mr-1">
+        <span className="text-sm font-medium text-[oklch(0.55_0.04_280)] mr-1">
           {rating.toFixed(1)}
         </span>
       )}

@@ -73,9 +73,9 @@ export default function CommentManager() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <p className="text-sm text-muted-foreground">{comments.length} تعليق</p>
+        <p className="text-sm text-[oklch(0.55_0.04_280)]">{comments.length} تعليق</p>
         {comments.filter((c) => c.isReported).length > 0 && (
-          <Badge className="bg-red-100 text-red-700 border-0 rounded-lg text-xs">
+          <Badge className="bg-[oklch(0.645_0.246_16.4_/_0.15)] text-[oklch(0.745_0.166_16.4)] border border-[oklch(0.645_0.246_16.4_/_0.3)] rounded-lg text-xs">
             <AlertTriangle className="h-3 w-3 ml-1" />
             {comments.filter((c) => c.isReported).length} مبلغ عنهم
           </Badge>
@@ -90,24 +90,24 @@ export default function CommentManager() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.03 }}
           >
-            <Card className={`p-4 rounded-2xl border-0 shadow-sm ${comment.isReported ? 'border-r-4 border-r-red-400' : ''}`}>
+            <Card className={`glass-card p-4 rounded-2xl ${comment.isReported ? 'border-r-4 border-r-[oklch(0.645_0.246_16.4)]' : ''}`}>
               <div className="flex items-start gap-3">
-                <Avatar className="h-8 w-8 border border-stone-200 shrink-0">
-                  <AvatarFallback className="bg-stone-100 text-stone-600 text-xs font-semibold">
+                <Avatar className="h-8 w-8 border border-[oklch(0.25_0.04_280)] shrink-0">
+                  <AvatarFallback className="bg-[oklch(0.18_0.03_280)] text-[oklch(0.7_0.04_280)] text-xs font-semibold">
                     {comment.user?.name?.charAt(0) || 'م'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-stone-800">{comment.user?.name}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString('ar-EG')}</span>
+                    <span className="text-sm font-medium text-white">{comment.user?.name}</span>
+                    <span className="text-xs text-[oklch(0.55_0.04_280)]">{new Date(comment.createdAt).toLocaleDateString('ar-EG')}</span>
                     {comment.isReported && (
-                      <Badge className="bg-red-100 text-red-700 border-0 rounded text-[10px]">مبلغ عنه</Badge>
+                      <Badge className="bg-[oklch(0.645_0.246_16.4_/_0.15)] text-[oklch(0.745_0.166_16.4)] border border-[oklch(0.645_0.246_16.4_/_0.3)] rounded text-[10px]">مبلغ عنه</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-stone-600 mb-2">{comment.content}</p>
+                  <p className="text-sm text-[oklch(0.7_0.04_280)] mb-2">{comment.content}</p>
                   {comment.video && (
-                    <p className="text-xs text-muted-foreground">على: {comment.video.title}</p>
+                    <p className="text-xs text-[oklch(0.55_0.04_280)]">على: {comment.video.title}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -116,7 +116,7 @@ export default function CommentManager() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleApprove(comment.id)}
-                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs"
+                      className="text-[oklch(0.796_0.13_162.48)] hover:text-[oklch(0.896_0.13_162.48)] hover:bg-[oklch(0.696_0.17_162.48_/_0.1)] rounded-lg text-xs"
                     >
                       <CheckCircle className="h-4 w-4" />
                     </Button>
@@ -125,7 +125,7 @@ export default function CommentManager() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(comment.id)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs"
+                    className="text-[oklch(0.745_0.166_16.4)] hover:text-[oklch(0.845_0.166_16.4)] hover:bg-[oklch(0.645_0.246_16.4_/_0.1)] rounded-lg text-xs"
                   >
                     حذف
                   </Button>
@@ -137,7 +137,7 @@ export default function CommentManager() {
       </div>
 
       {comments.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">لا توجد تعليقات</div>
+        <div className="text-center py-8 text-[oklch(0.55_0.04_280)]">لا توجد تعليقات</div>
       )}
     </div>
   )

@@ -10,6 +10,7 @@ import {
   Shield,
   Bookmark,
   Video,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -51,21 +52,26 @@ export default function Header() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="sticky top-0 z-50 glass border-b border-stone-200/50"
+      className="sticky top-0 z-50 glass-aurora"
     >
+      {/* Top gradient accent line */}
+      <div className="h-[2px] gradient-aurora" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
           <button
             onClick={goHome}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2.5 shrink-0 group"
           >
-            <div className="w-9 h-9 rounded-xl gradient-emerald-teal flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <Play className="h-4 w-4 text-white fill-white" />
+            <div className="w-10 h-10 rounded-2xl gradient-aurora flex items-center justify-center shadow-lg group-hover:shadow-xl neon-violet transition-all duration-300">
+              <Play className="h-4.5 w-4.5 text-white fill-white" />
             </div>
-            <span className="text-xl font-bold text-stone-800 hidden sm:block">
-              VidVerse
-            </span>
+            <div className="hidden sm:block">
+              <span className="text-xl font-bold text-gradient-aurora">
+                VidVerse
+              </span>
+            </div>
           </button>
 
           {/* Desktop Search */}
@@ -79,7 +85,7 @@ export default function Header() {
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item.view)}
-                className="px-3 py-2 rounded-xl text-sm font-medium text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-all"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-[oklch(0.7_0.04_280)] hover:text-white hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] transition-all duration-300"
               >
                 {item.label}
               </button>
@@ -90,33 +96,33 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {isAuthenticated && user ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-stone-100 transition-colors">
-                  <Avatar className="h-8 w-8 border-2 border-emerald-200">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm font-semibold">
+                <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] transition-colors">
+                  <Avatar className="h-9 w-9 border-2 border-[oklch(0.627_0.265_303.9_/_0.4)]">
+                    <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.2)] text-[oklch(0.827_0.165_303.9)] text-sm font-semibold">
                       {getUserInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-medium text-stone-700">
+                  <span className="hidden sm:block text-sm font-medium text-[oklch(0.85_0.02_280)]">
                     {user.name}
                   </span>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl">
-                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer">
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl bg-[oklch(0.13_0.028_280)] border-[oklch(0.25_0.04_280)]">
+                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
                     <User className="h-4 w-4 ml-2" />
                     <span>الملف الشخصي</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer">
+                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
                     <Bookmark className="h-4 w-4 ml-2" />
                     <span>المحفوظات</span>
                   </DropdownMenuItem>
                   {user.role === 'admin' && (
-                    <DropdownMenuItem onClick={() => setView('admin')} className="rounded-xl cursor-pointer">
+                    <DropdownMenuItem onClick={() => setView('admin')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
                       <Shield className="h-4 w-4 ml-2" />
                       <span>لوحة التحكم</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="rounded-xl text-red-600 cursor-pointer">
+                  <DropdownMenuSeparator className="bg-[oklch(0.25_0.04_280)]" />
+                  <DropdownMenuItem onClick={logout} className="rounded-xl text-[oklch(0.645_0.246_16.4)] cursor-pointer focus:bg-[oklch(0.645_0.246_16.4_/_0.1)]">
                     <LogOut className="h-4 w-4 ml-2" />
                     <span>تسجيل الخروج</span>
                   </DropdownMenuItem>
@@ -128,16 +134,17 @@ export default function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setView('login')}
-                  className="rounded-xl text-stone-600"
+                  className="rounded-xl text-[oklch(0.7_0.04_280)] hover:text-white hover:bg-[oklch(0.627_0.265_303.9_/_0.1)]"
                 >
                   دخول
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => setView('register')}
-                  className="rounded-xl gradient-emerald-teal text-white border-0 hover:opacity-90"
+                  className="btn-aurora rounded-xl border-0"
                 >
-                  تسجيل
+                  <Sparkles className="h-4 w-4 ml-1" />
+                  <span>تسجيل</span>
                 </Button>
               </div>
             )}
@@ -145,12 +152,12 @@ export default function Header() {
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger className="md:hidden">
-                <div className="inline-flex items-center justify-center rounded-xl p-2 text-stone-600 hover:bg-stone-100 transition-colors">
+                <div className="inline-flex items-center justify-center rounded-xl p-2 text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] transition-colors">
                   <Menu className="h-5 w-5" />
                 </div>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 rounded-l-3xl">
-                <SheetTitle className="text-right">القائمة</SheetTitle>
+              <SheetContent side="right" className="w-80 rounded-l-3xl bg-[oklch(0.10_0.025_280)] border-l-[oklch(0.25_0.04_280)]">
+                <SheetTitle className="text-right text-gradient-aurora">القائمة</SheetTitle>
                 <div className="flex flex-col gap-2 mt-6">
                   <div className="md:hidden mb-4">
                     <SearchBar />
@@ -159,7 +166,7 @@ export default function Header() {
                     <button
                       key={item.label}
                       onClick={() => handleNavClick(item.view)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-stone-600 hover:bg-stone-100 hover:text-stone-800 transition-all"
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] hover:text-white transition-all"
                     >
                       <item.icon className="h-5 w-5" />
                       <span className="font-medium">{item.label}</span>
@@ -169,7 +176,7 @@ export default function Header() {
                     <>
                       <button
                         onClick={() => { setView('profile'); setMobileMenuOpen(false) }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-stone-600 hover:bg-stone-100 hover:text-stone-800 transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] hover:text-white transition-all"
                       >
                         <User className="h-5 w-5" />
                         <span className="font-medium">الملف الشخصي</span>
@@ -177,7 +184,7 @@ export default function Header() {
                       {user.role === 'admin' && (
                         <button
                           onClick={() => { setView('admin'); setMobileMenuOpen(false) }}
-                          className="flex items-center gap-3 px-4 py-3 rounded-2xl text-stone-600 hover:bg-stone-100 hover:text-stone-800 transition-all"
+                          className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] hover:text-white transition-all"
                         >
                           <Shield className="h-5 w-5" />
                           <span className="font-medium">لوحة التحكم</span>

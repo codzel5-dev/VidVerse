@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -43,9 +42,9 @@ export function getInitialData(): InitialData | null {
 
 function HomeView({ data }: { data: InitialData }) {
   return (
-    <div className="space-y-12">
+    <div className="space-y-0">
       <HeroSection stats={data.stats} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 py-12">
         <StatsBar stats={data.stats} />
         <LatestVideos initialVideos={data.videos} />
         <FeaturedCourses initialCourses={data.courses} />
@@ -106,7 +105,7 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
   _initialData = initialData
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50">
+    <div className="min-h-screen flex flex-col bg-background cosmic-stars">
       <Header />
       <ViewRenderer data={initialData} />
       <Footer />
