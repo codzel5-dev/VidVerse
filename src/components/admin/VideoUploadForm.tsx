@@ -12,7 +12,6 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from 'sonner'
-import { Upload as TusUpload } from 'tus-js-client'
 
 interface Category {
   id: string
@@ -44,7 +43,7 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
   const [uploadEta, setUploadEta] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [seekVideoId, setSeekVideoId] = useState<string | null>(null)
-  const uploadRef = useRef<TusUpload | null>(null)
+  const xhrRef = useRef<XMLHttpRequest | null>(null)
   const lastProgressRef = useRef({ bytes: 0, time: 0 })
 
   // URL import state
@@ -83,7 +82,7 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
     setUploadEta(0)
     setIsUploading(false)
     setSeekVideoId(null)
-    uploadRef.current = null
+    xhrRef.current = null
     setImportUrl('')
     setIsImporting(false)
     setImportTaskId(null)
@@ -100,8 +99,8 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
 
   const handleClose = () => {
     // Cancel ongoing uploads
-    if (uploadRef.current) {
-      uploadRef.current.abort()
+    if (xhrRef.current) {
+      xhrRef.current.abort()
     }
     if (importPollRef.current) {
       clearInterval(importPollRef.current)
@@ -110,71 +109,87 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
     onOpenChange(false)
   }
 
-  // TUS file upload
+  // File upload via our backend proxy (avoids CORS issues with direct SeekStreaming upload)
   const startFileUpload = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || !user?.id) return
 
     setIsUploading(true)
     setUploadProgress(0)
     lastProgressRef.current = { bytes: 0, time: Date.now() }
 
     try {
-      const headers: HeadersInit = {}
-      if (user?.id) headers['x-user-id'] = user.id
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('fileName', selectedFile.name)
+      formData.append('fileType', selectedFile.type)
 
-      const uploadInfoRes = await fetch('/api/seekstreaming/upload-info', { headers })
-      const { tusUrl, accessToken } = await uploadInfoRes.json()
+      const xhr = new XMLHttpRequest()
+      xhrRef.current = xhr
 
-      const upload = new TusUpload(selectedFile, {
-        endpoint: tusUrl,
-        chunkSize: 50 * 1024 * 1024,
-        retryDelays: [0, 3000, 5000, 10000, 20000],
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        metadata: {
-          filename: selectedFile.name,
-          filetype: selectedFile.type,
-        },
-        onError: (error) => {
-          console.error('TUS upload error:', error)
-          toast.error('حدث خطأ أثناء رفع الفيديو')
-          setIsUploading(false)
-        },
-        onProgress: (bytesUploaded, bytesTotal) => {
-          const percentage = Math.round((bytesUploaded / bytesTotal) * 100)
+      // Track upload progress
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentage = Math.round((event.loaded / event.total) * 100)
           setUploadProgress(percentage)
 
           // Calculate speed
           const now = Date.now()
           const elapsed = (now - lastProgressRef.current.time) / 1000
           if (elapsed > 0) {
-            const bytesDiff = bytesUploaded - lastProgressRef.current.bytes
+            const bytesDiff = event.loaded - lastProgressRef.current.bytes
             const speed = bytesDiff / elapsed
             setUploadSpeed(speed)
-            const remaining = bytesTotal - bytesUploaded
+            const remaining = event.total - event.loaded
             setUploadEta(remaining / speed)
           }
-          lastProgressRef.current = { bytes: bytesUploaded, time: now }
-        },
-        onSuccess: () => {
-          const videoId = upload.url?.split('/').pop() || null
-          if (videoId) {
-            setSeekVideoId(videoId)
-            setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''))
-            setStep('details')
+          lastProgressRef.current = { bytes: event.loaded, time: now }
+        }
+      }
+
+      // Handle completion
+      const uploadPromise = new Promise<{ seekVideoId: string }>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText)
+              resolve(data)
+            } catch {
+              reject(new Error('فشل تحليل استجابة السيرفر'))
+            }
           } else {
-            toast.error('لم يتم الحصول على معرف الفيديو')
+            try {
+              const errorData = JSON.parse(xhr.responseText)
+              reject(new Error(errorData.error || `خطأ في الرفع: ${xhr.status}`))
+            } catch {
+              reject(new Error(`خطأ في الرفع: ${xhr.status}`))
+            }
           }
-          setIsUploading(false)
-        },
+        }
+
+        xhr.onerror = () => reject(new Error('حدث خطأ في الشبكة'))
+        xhr.onabort = () => reject(new Error('تم إلغاء الرفع'))
       })
 
-      uploadRef.current = upload
-      upload.start()
+      xhr.open('POST', '/api/seekstreaming/upload-file')
+      xhr.setRequestHeader('x-user-id', user.id)
+      xhr.send(formData)
+
+      const result = await uploadPromise
+
+      if (result.seekVideoId) {
+        setSeekVideoId(result.seekVideoId)
+        setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''))
+        setStep('details')
+        toast.success('تم رفع الفيديو بنجاح!')
+      } else {
+        toast.error('لم يتم الحصول على معرف الفيديو')
+      }
     } catch (error) {
       console.error('Failed to start upload:', error)
-      toast.error('حدث خطأ أثناء بدء الرفع')
+      if ((error as Error).message !== 'تم إلغاء الرفع') {
+        toast.error(error instanceof Error ? error.message : 'حدث خطأ أثناء بدء الرفع')
+      }
+    } finally {
       setIsUploading(false)
     }
   }
