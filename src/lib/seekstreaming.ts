@@ -1,7 +1,7 @@
-export const SEEKSTREAMING_API_URL = 'https://seekstreaming.com'
-export const SEEKSTREAMING_TOKEN = '0cb3add5ab77cf8c3f1d1dcf'
-export const SEEKSTREAMING_TUS_URL = 'https://sic.up-seekstreaming.com/upload/'
-export const SEEKSTREAMING_TUS_ACCESS_TOKEN = 'MnhSMEQzd0Ezdm1xNmZOTXltVjVqZG1DTGZLSW1kVzhWNUhVNy9zVkt3PT06MG5LMUZwZlYvS0JlODIwRzRpOVQ0Zz09'
+export const SEEKSTREAMING_API_URL = process.env.SEEKSTREAMING_API_URL || 'https://seekstreaming.com'
+export const SEEKSTREAMING_TOKEN = process.env.SEEKSTREAMING_API_TOKEN || '0cb3add5ab77cf8c3f1d1dcf'
+export const SEEKSTREAMING_TUS_URL = process.env.SEEKSTREAMING_TUS_URL || 'https://sic.up-seekstreaming.com/upload/'
+export const SEEKSTREAMING_TUS_ACCESS_TOKEN = process.env.SEEKSTREAMING_TUS_ACCESS_TOKEN || 'MnhSMEQzd0Ezdm1xNmZOTXltVjVqZG1DTGZLSW1kVzhWNUhVNy9zVkt3PT06MG5LMUZwZlYvS0JlODIwRzRpOVQ0Zz09'
 
 export interface SeekStreamingVideo {
   id: string
@@ -47,7 +47,7 @@ export interface SeekStreamingPlayer {
   premiumPlay: number
   download: number
   premiumDownload: number
-  configuration: any
+  configuration: Record<string, unknown>
   status: string
   updatedAt: string
   createdAt: string
@@ -67,7 +67,7 @@ class SeekStreamingAPI {
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.token}`,
+        'api-token': this.token,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -173,7 +173,7 @@ class SeekStreamingAPI {
 
   // Generate embed URL for a video
   getEmbedUrl(videoId: string): string {
-    return `${this.baseUrl}/embed/${videoId}`
+    return `${this.baseUrl}/e/${videoId}`
   }
 
   // Get player embed URL
