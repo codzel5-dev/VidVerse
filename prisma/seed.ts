@@ -63,7 +63,7 @@ async function main() {
   await prisma.user.deleteMany()
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 12)
+  const adminPassword = await bcrypt.hash('password123', 12)
   const admin = await prisma.user.create({
     data: {
       name: 'مدير المنصة',
