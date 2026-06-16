@@ -2,25 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
 import os from 'os'
+import { getImageUploadConfig } from '@/app/api/admin/config/route'
 
 /**
  * Build a direct CDN image URL from the upload service response.
  * Prefers jsDelivr with commit SHA for a stable, immutable URL.
  * Falls back to raw.githubusercontent / github.com blob URLs.
+ *
+ * Owner/repo are passed explicitly (from DB config) so we don't depend on
+ * process.env at URL build time.
  */
-function buildImageUrl(uploadData: {
-  url?: string
-  filename?: string
-  commit_sha?: string
-  urls?: {
-    jsdelivr_commit?: string
-    jsdelivr?: string
-    raw_commit?: string
-    raw?: string
-    github_commit?: string
-    github?: string
-  }
-}): string {
+function buildImageUrl(
+  uploadData: {
+    url?: string
+    filename?: string
+    commit_sha?: string
+    urls?: {
+      jsdelivr_commit?: string
+      jsdelivr?: string
+      raw_commit?: string
+      raw?: string
+      github_commit?: string
+      github?: string
+    }
+  },
+  owner: string,
+  repo: string
+): string {
   const urls = uploadData.urls || {}
 
   // 1) Best: jsDelivr pinned to a specific commit (immutable + CDN cached)
@@ -33,10 +41,7 @@ function buildImageUrl(uploadData: {
 
   // 3) Construct jsDelivr URL with commit SHA manually
   if (uploadData.filename && uploadData.commit_sha) {
-    const owner = process.env.GITHUB_OWNER
-    const repo = process.env.GITHUB_REPO
     if (owner && repo) {
-      // filename may already include the folder path (e.g. "uploads/image.png")
       const cleanFilename = uploadData.filename.replace(/^\/+/, '')
       return `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${uploadData.commit_sha}/${cleanFilename}`
     }
@@ -121,19 +126,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Required env vars
-    const githubToken = process.env.GITHUB_TOKEN
-    const githubOwner = process.env.GITHUB_OWNER
-    const githubRepo = process.env.GITHUB_REPO
-    const githubBranch = process.env.GITHUB_BRANCH || 'main'
-    const uploadFolder = process.env.UPLOAD_FOLDER || 'uploads'
-    const picserUrl =
-      process.env.PICSER_UPLOAD_URL || 'https://picser.pages.dev/api/public-upload'
+    // Required config — read from DB first (admin panel), fall back to env vars.
+    // This lets the user configure upload settings from the admin UI without
+    // needing to redeploy or set platform-specific env vars.
+    const cfg = await getImageUploadConfig()
+    const githubToken = cfg.GITHUB_TOKEN
+    const githubOwner = cfg.GITHUB_OWNER
+    const githubRepo = cfg.GITHUB_REPO
+    const githubBranch = cfg.GITHUB_BRANCH || 'main'
+    const uploadFolder = cfg.UPLOAD_FOLDER || 'uploads'
+    const picserUrl = cfg.PICSER_UPLOAD_URL || 'https://picser.pages.dev/api/public-upload'
 
     if (!githubToken || !githubOwner || !githubRepo) {
-      console.error('[upload-image] Missing GitHub env vars')
+      const missing: string[] = []
+      if (!githubToken) missing.push('GITHUB_TOKEN')
+      if (!githubOwner) missing.push('GITHUB_OWNER')
+      if (!githubRepo) missing.push('GITHUB_REPO')
+      console.error('[upload-image] Missing config:', missing.join(', '))
       return NextResponse.json(
-        { success: false, error: 'إعدادات الرفع غير مكتملة على السيرفر' },
+        {
+          success: false,
+          error: `إعدادات الرفع غير مكتملة. المتغيرات الناقصة: ${missing.join(', ')}. يمكن إضافتها من لوحة الإدارة → الإعدادات.`,
+        },
         { status: 500 }
       )
     }
@@ -199,7 +213,7 @@ export async function POST(request: NextRequest) {
 
     let imageUrl: string
     try {
-      imageUrl = buildImageUrl(uploadData)
+      imageUrl = buildImageUrl(uploadData, githubOwner, githubRepo)
     } catch (e) {
       console.error(
         '[upload-image] Failed to build image URL:',

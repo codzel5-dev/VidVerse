@@ -7,6 +7,7 @@ import {
   BookOpen,
   MessageCircle,
   BarChart3,
+  Settings,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthStore } from '@/store/auth-store'
@@ -16,6 +17,7 @@ import VideoManager from './VideoManager'
 import UserManager from './UserManager'
 import CourseManager from './CourseManager'
 import CommentManager from './CommentManager'
+import AdminSettingsPanel from './AdminSettingsPanel'
 
 export default function AdminDashboard() {
   const user = useAuthStore((s) => s.user)
@@ -68,6 +70,10 @@ export default function AdminDashboard() {
             <MessageCircle className="h-4 w-4 ml-1.5" />
             التعليقات
           </TabsTrigger>
+          <TabsTrigger value="settings" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
+            <Settings className="h-4 w-4 ml-1.5" />
+            الإعدادات
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="stats" className="mt-4">
@@ -84,6 +90,9 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="comments" className="mt-4">
           <CommentManager />
+        </TabsContent>
+        <TabsContent value="settings" className="mt-4">
+          <AdminSettingsPanel />
         </TabsContent>
       </Tabs>
     </motion.div>
