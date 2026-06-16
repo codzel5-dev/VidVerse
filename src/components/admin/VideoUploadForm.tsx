@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Link, FileVideo, X, Loader2, Check } from 'lucide-react'
+import { Upload, FileVideo, X, Loader2, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,7 +25,6 @@ interface VideoUploadFormProps {
   onVideoCreated: () => void
 }
 
-type UploadMode = 'file' | 'url'
 type Step = 'upload' | 'details'
 
 const ACCEPTED_TYPES = '.mp4,.webm,.avi,.mov,.mkv,video/mp4,video/webm,video/x-msvideo,video/quicktime,video/x-matroska'
@@ -33,7 +32,6 @@ const ACCEPTED_TYPES = '.mp4,.webm,.avi,.mov,.mkv,video/mp4,video/webm,video/x-m
 export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: VideoUploadFormProps) {
   const user = useAuthStore((s) => s.user)
 
-  const [mode, setMode] = useState<UploadMode>('file')
   const [step, setStep] = useState<Step>('upload')
 
   // File upload state
@@ -42,16 +40,15 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
   const [uploadSpeed, setUploadSpeed] = useState(0)
   const [uploadEta, setUploadEta] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
-  const [seekVideoId, setSeekVideoId] = useState<string | null>(null)
+
+  // Upload result (from AnonMP4)
+  const [hostVideoId, setHostVideoId] = useState<string | null>(null)
+  const [hostEmbedUrl, setHostEmbedUrl] = useState<string | null>(null)
+  const [hostThumbnail, setHostThumbnail] = useState<string | null>(null)
+  const [hostDeleteUrl, setHostDeleteUrl] = useState<string | null>(null)
+
   const xhrRef = useRef<XMLHttpRequest | null>(null)
   const lastProgressRef = useRef({ bytes: 0, time: 0 })
-
-  // URL import state
-  const [importUrl, setImportUrl] = useState('')
-  const [isImporting, setIsImporting] = useState(false)
-  const [, setImportTaskId] = useState<string | null>(null)
-  const [importStatus, setImportStatus] = useState<string>('')
-  const importPollRef = useRef<NodeJS.Timeout | null>(null)
 
   // Details form state
   const [title, setTitle] = useState('')
@@ -74,20 +71,17 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
 
   // Reset form on open/close
   const resetForm = useCallback(() => {
-    setMode('file')
     setStep('upload')
     setSelectedFile(null)
     setUploadProgress(0)
     setUploadSpeed(0)
     setUploadEta(0)
     setIsUploading(false)
-    setSeekVideoId(null)
+    setHostVideoId(null)
+    setHostEmbedUrl(null)
+    setHostThumbnail(null)
+    setHostDeleteUrl(null)
     xhrRef.current = null
-    setImportUrl('')
-    setIsImporting(false)
-    setImportTaskId(null)
-    setImportStatus('')
-    if (importPollRef.current) clearInterval(importPollRef.current)
     setTitle('')
     setDescription('')
     setCategoryId('')
@@ -98,18 +92,14 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
   }, [])
 
   const handleClose = () => {
-    // Cancel ongoing uploads
     if (xhrRef.current) {
       xhrRef.current.abort()
-    }
-    if (importPollRef.current) {
-      clearInterval(importPollRef.current)
     }
     resetForm()
     onOpenChange(false)
   }
 
-  // File upload via our backend proxy (avoids CORS issues with direct SeekStreaming upload)
+  // Upload file to our backend which proxies to AnonMP4
   const startFileUpload = async () => {
     if (!selectedFile || !user?.id) return
 
@@ -121,7 +111,6 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
       const formData = new FormData()
       formData.append('file', selectedFile)
       formData.append('fileName', selectedFile.name)
-      formData.append('fileType', selectedFile.type)
 
       const xhr = new XMLHttpRequest()
       xhrRef.current = xhr
@@ -132,7 +121,6 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
           const percentage = Math.round((event.loaded / event.total) * 100)
           setUploadProgress(percentage)
 
-          // Calculate speed
           const now = Date.now()
           const elapsed = (now - lastProgressRef.current.time) / 1000
           if (elapsed > 0) {
@@ -146,8 +134,12 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
         }
       }
 
-      // Handle completion
-      const uploadPromise = new Promise<{ seekVideoId: string }>((resolve, reject) => {
+      const uploadPromise = new Promise<{
+        videoId: string
+        embedUrl: string
+        thumbnail: string
+        deleteUrl: string
+      }>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
@@ -165,106 +157,40 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
             }
           }
         }
-
         xhr.onerror = () => reject(new Error('حدث خطأ في الشبكة'))
         xhr.onabort = () => reject(new Error('تم إلغاء الرفع'))
       })
 
-      xhr.open('POST', '/api/seekstreaming/upload-file')
+      xhr.open('POST', '/api/anonmp4/upload')
       xhr.setRequestHeader('x-user-id', user.id)
       xhr.send(formData)
 
       const result = await uploadPromise
 
-      if (result.seekVideoId) {
-        setSeekVideoId(result.seekVideoId)
-        setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''))
-        setStep('details')
-        toast.success('تم رفع الفيديو بنجاح!')
-      } else {
-        toast.error('لم يتم الحصول على معرف الفيديو')
-      }
+      // Store AnonMP4 result
+      setHostVideoId(result.videoId)
+      setHostEmbedUrl(result.embedUrl)
+      setHostThumbnail(result.thumbnail)
+      setHostDeleteUrl(result.deleteUrl)
+
+      // Auto-fill title from filename
+      setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''))
+      setStep('details')
+      toast.success('تم رفع الفيديو بنجاح!')
+
     } catch (error) {
-      console.error('Failed to start upload:', error)
+      console.error('Upload error:', error)
       if ((error as Error).message !== 'تم إلغاء الرفع') {
-        toast.error(error instanceof Error ? error.message : 'حدث خطأ أثناء بدء الرفع')
+        toast.error(error instanceof Error ? error.message : 'حدث خطأ أثناء الرفع')
       }
     } finally {
       setIsUploading(false)
     }
   }
 
-  // URL import
-  const startUrlImport = async () => {
-    if (!importUrl.trim()) return
-
-    setIsImporting(true)
-    setImportStatus('جارٍ إنشاء مهمة الاستيراد...')
-
-    try {
-      const headers: HeadersInit = { 'Content-Type': 'application/json' }
-      if (user?.id) headers['x-user-id'] = user.id
-
-      const res = await fetch('/api/seekstreaming/advance-upload', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ url: importUrl }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'فشل الاستيراد')
-      }
-
-      const taskId = data.task?.id || data.task?.taskId
-      if (!taskId) {
-        throw new Error('لم يتم الحصول على معرف المهمة')
-      }
-
-      setImportTaskId(taskId)
-      setImportStatus('جارٍ استيراد الفيديو...')
-
-      // Poll for status
-      importPollRef.current = setInterval(async () => {
-        try {
-          const pollHeaders: HeadersInit = {}
-          if (user?.id) pollHeaders['x-user-id'] = user.id
-          const pollRes = await fetch(`/api/seekstreaming/advance-upload?taskId=${taskId}`, { headers: pollHeaders })
-          const pollData = await pollRes.json()
-
-          const status = pollData.task?.status
-          setImportStatus(status === 'processing' ? 'جارٍ المعالجة...' : status === 'downloading' ? 'جارٍ التحميل...' : `الحالة: ${status || 'قيد الانتظار'}`)
-
-          if (status === 'completed' || status === 'done' || status === 'ready') {
-            if (importPollRef.current) clearInterval(importPollRef.current)
-            const videoId = pollData.task?.videoId || pollData.task?.id || taskId
-            setSeekVideoId(videoId)
-            setTitle(importUrl.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'فيديو مستورد')
-            setStep('details')
-            setIsImporting(false)
-            toast.success('تم استيراد الفيديو بنجاح')
-          } else if (status === 'failed' || status === 'error') {
-            if (importPollRef.current) clearInterval(importPollRef.current)
-            toast.error('فشل استيراد الفيديو')
-            setIsImporting(false)
-          }
-        } catch {
-          if (importPollRef.current) clearInterval(importPollRef.current)
-          toast.error('حدث خطأ أثناء التحقق من حالة الاستيراد')
-          setIsImporting(false)
-        }
-      }, 5000)
-    } catch (error) {
-      console.error('Failed to start import:', error)
-      toast.error(error instanceof Error ? error.message : 'حدث خطأ أثناء الاستيراد')
-      setIsImporting(false)
-    }
-  }
-
-  // Submit video details
+  // Submit video details and sync to local DB
   const handleSubmit = async () => {
-    if (!seekVideoId || !title.trim()) {
+    if (!hostVideoId || !title.trim()) {
       toast.error('يرجى ملء الحقول المطلوبة')
       return
     }
@@ -275,17 +201,19 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
       const headers: HeadersInit = { 'Content-Type': 'application/json' }
       if (user?.id) headers['x-user-id'] = user.id
 
-      const res = await fetch('/api/seekstreaming/sync', {
+      const res = await fetch('/api/anonmp4/sync', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          seekVideoId,
+          hostVideoId,
           title: title.trim(),
           description: description.trim() || undefined,
           categoryId: categoryId || undefined,
           isFree,
           isPublished,
           isFeatured,
+          embedUrl: hostEmbedUrl,
+          thumbnail: hostThumbnail,
         }),
       })
 
@@ -332,7 +260,7 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
         <DialogHeader>
           <DialogTitle className="text-white text-lg">رفع فيديو جديد</DialogTitle>
           <DialogDescription className="text-[oklch(0.55_0.04_280)]">
-            {step === 'upload' ? 'اختر طريقة رفع الفيديو' : 'أدخل تفاصيل الفيديو'}
+            {step === 'upload' ? 'اختر ملف الفيديو لرفعه' : 'أدخل تفاصيل الفيديو'}
           </DialogDescription>
         </DialogHeader>
 
@@ -345,162 +273,84 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
               exit={{ opacity: 0, x: 20 }}
               className="space-y-4"
             >
-              {/* Mode Tabs */}
-              <div className="flex gap-2 p-1 bg-[oklch(0.08_0.02_280)] rounded-xl">
-                <button
-                  onClick={() => setMode('file')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                    mode === 'file'
-                      ? 'bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)]'
-                      : 'text-[oklch(0.55_0.04_280)] hover:text-[oklch(0.7_0.04_280)]'
-                  }`}
-                >
-                  <Upload className="h-4 w-4" />
-                  رفع ملف
-                </button>
-                <button
-                  onClick={() => setMode('url')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                    mode === 'url'
-                      ? 'bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)]'
-                      : 'text-[oklch(0.55_0.04_280)] hover:text-[oklch(0.7_0.04_280)]'
-                  }`}
-                >
-                  <Link className="h-4 w-4" />
-                  استيراد من رابط
-                </button>
-              </div>
-
-              {mode === 'file' ? (
-                <div className="space-y-4">
-                  {/* File Picker */}
-                  {!selectedFile ? (
-                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[oklch(0.25_0.04_280)] rounded-2xl cursor-pointer hover:border-[oklch(0.627_0.265_303.9_/_0.5)] hover:bg-[oklch(0.627_0.265_303.9_/_0.05)] transition-all group">
-                      <FileVideo className="h-12 w-12 text-[oklch(0.55_0.04_280)] mb-3 group-hover:text-[oklch(0.827_0.165_303.9)] transition-colors" />
-                      <p className="text-sm text-[oklch(0.7_0.04_280)] font-medium">اختر ملف الفيديو</p>
-                      <p className="text-xs text-[oklch(0.55_0.04_280)] mt-1">MP4, WebM, AVI, MOV, MKV</p>
-                      <input
-                        type="file"
-                        accept={ACCEPTED_TYPES}
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) setSelectedFile(file)
-                        }}
-                      />
-                    </label>
-                  ) : (
-                    <div className="glass-card p-4 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-[oklch(0.627_0.265_303.9_/_0.15)] flex items-center justify-center shrink-0">
-                          <FileVideo className="h-5 w-5 text-[oklch(0.827_0.165_303.9)]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{selectedFile.name}</p>
-                          <p className="text-xs text-[oklch(0.55_0.04_280)]">{formatFileSize(selectedFile.size)}</p>
-                        </div>
-                        {!isUploading && (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-[oklch(0.55_0.04_280)] hover:text-[oklch(0.745_0.166_16.4)]"
-                            onClick={() => setSelectedFile(null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Progress Bar */}
-                      {isUploading && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="mt-4 space-y-2"
-                        >
-                          <div className="progress-aurora h-2">
-                            <motion.div
-                              className="progress-aurora-bar h-full animate-gradient-flow"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${uploadProgress}%` }}
-                              style={{ backgroundSize: '200% 200%' }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-[oklch(0.55_0.04_280)]">
-                            <span>{uploadProgress}%</span>
-                            <span>{formatSpeed(uploadSpeed)}</span>
-                            <span>الوقت المتبقي: {formatEta(uploadEta)}</span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Upload Button */}
-                  {selectedFile && !isUploading && !seekVideoId && (
-                    <Button
-                      onClick={startFileUpload}
-                      className="w-full btn-aurora rounded-xl h-10"
-                    >
-                      <Upload className="h-4 w-4 ml-2" />
-                      <span>بدء الرفع</span>
-                    </Button>
-                  )}
-                </div>
+              {/* File Picker */}
+              {!selectedFile ? (
+                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[oklch(0.25_0.04_280)] rounded-2xl cursor-pointer hover:border-[oklch(0.627_0.265_303.9_/_0.5)] hover:bg-[oklch(0.627_0.265_303.9_/_0.05)] transition-all group">
+                  <FileVideo className="h-12 w-12 text-[oklch(0.55_0.04_280)] mb-3 group-hover:text-[oklch(0.827_0.165_303.9)] transition-colors" />
+                  <p className="text-sm text-[oklch(0.7_0.04_280)] font-medium">اختر ملف الفيديو</p>
+                  <p className="text-xs text-[oklch(0.55_0.04_280)] mt-1">MP4, WebM, AVI, MOV, MKV — حتى 20 جيجا</p>
+                  <input
+                    type="file"
+                    accept={ACCEPTED_TYPES}
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) setSelectedFile(file)
+                    }}
+                  />
+                </label>
               ) : (
-                <div className="space-y-4">
-                  {/* URL Input */}
-                  <div className="space-y-2">
-                    <Label className="text-[oklch(0.7_0.04_280)]">رابط الفيديو</Label>
-                    <Input
-                      value={importUrl}
-                      onChange={(e) => setImportUrl(e.target.value)}
-                      placeholder="أدخل رابط الفيديو أو رابط الماغنت..."
-                      className="input-aurora rounded-xl text-white placeholder:text-[oklch(0.4_0.03_280)]"
-                      disabled={isImporting}
-                    />
-                    <p className="text-xs text-[oklch(0.55_0.04_280)]">
-                      يدعم الروابط المباشرة وروابط الماغنت
-                    </p>
+                <div className="glass-card p-4 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-[oklch(0.627_0.265_303.9_/_0.15)] flex items-center justify-center shrink-0">
+                      <FileVideo className="h-5 w-5 text-[oklch(0.827_0.165_303.9)]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{selectedFile.name}</p>
+                      <p className="text-xs text-[oklch(0.55_0.04_280)]">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                    {!isUploading && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-[oklch(0.55_0.04_280)] hover:text-[oklch(0.745_0.166_16.4)]"
+                        onClick={() => setSelectedFile(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
 
-                  {/* Import Status */}
-                  {isImporting && (
+                  {/* Progress Bar */}
+                  {isUploading && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="glass-card p-4 rounded-2xl space-y-3"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-4 space-y-2"
                     >
-                      <div className="flex items-center gap-3">
-                        <Loader2 className="h-5 w-5 animate-spin text-[oklch(0.827_0.165_303.9)]" />
-                        <p className="text-sm text-white">{importStatus}</p>
+                      <div className="progress-aurora h-2">
+                        <motion.div
+                          className="progress-aurora-bar h-full animate-gradient-flow"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${uploadProgress}%` }}
+                          style={{ backgroundSize: '200% 200%' }}
+                        />
                       </div>
-                      <div className="progress-aurora h-1.5">
-                        <div className="progress-aurora-bar h-full animate-shimmer" style={{ width: '60%' }} />
+                      <div className="flex items-center justify-between text-xs text-[oklch(0.55_0.04_280)]">
+                        <span>{uploadProgress}%</span>
+                        <span>{formatSpeed(uploadSpeed)}</span>
+                        <span>الوقت المتبقي: {formatEta(uploadEta)}</span>
                       </div>
                     </motion.div>
                   )}
-
-                  {/* Import Button */}
-                  <Button
-                    onClick={startUrlImport}
-                    disabled={!importUrl.trim() || isImporting}
-                    className="w-full btn-aurora rounded-xl h-10"
-                  >
-                    {isImporting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 ml-2 animate-spin" />
-                        <span>جارٍ الاستيراد...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Link className="h-4 w-4 ml-2" />
-                        <span>استيراد</span>
-                      </>
-                    )}
-                  </Button>
                 </div>
               )}
+
+              {/* Upload Button */}
+              {selectedFile && !isUploading && !hostVideoId && (
+                <Button
+                  onClick={startFileUpload}
+                  className="w-full btn-aurora rounded-xl h-10"
+                >
+                  <Upload className="h-4 w-4 ml-2" />
+                  <span>بدء الرفع</span>
+                </Button>
+              )}
+
+              {/* Info note */}
+              <p className="text-xs text-[oklch(0.4_0.03_280)] text-center">
+                يتم رفع الفيديو عبر AnonMP4 — استضافة مجانية بدون حساب
+              </p>
             </motion.div>
           ) : (
             <motion.div
@@ -516,12 +366,24 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
                 <p className="text-sm text-[oklch(0.796_0.13_162.48)]">تم رفع الفيديو بنجاح! أدخل التفاصيل</p>
               </div>
 
-              {seekVideoId && (
+              {hostVideoId && (
                 <div className="flex items-center gap-2 text-xs text-[oklch(0.55_0.04_280)]">
-                  <span>معرف SeekStreaming:</span>
+                  <span>معرف AnonMP4:</span>
                   <Badge className="bg-[oklch(0.18_0.03_280)] text-[oklch(0.7_0.04_280)] border border-[oklch(0.25_0.04_280)] rounded-lg text-xs font-mono">
-                    {seekVideoId}
+                    {hostVideoId}
                   </Badge>
+                </div>
+              )}
+
+              {/* Thumbnail preview */}
+              {hostThumbnail && (
+                <div className="rounded-xl overflow-hidden border border-[oklch(0.25_0.04_280)]">
+                  <img
+                    src={hostThumbnail}
+                    alt="Video thumbnail"
+                    className="w-full h-32 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
                 </div>
               )}
 

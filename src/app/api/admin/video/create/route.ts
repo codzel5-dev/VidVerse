@@ -56,9 +56,7 @@ export async function POST(request: NextRequest) {
       isPublished = false,
       isFeatured = false,
       categoryId,
-      seekVideoId,
-      seekStatus,
-      seekPlayerId,
+      hostVideoId,
       embedUrl,
       tagIds = [],
     } = body
@@ -70,14 +68,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if seekVideoId already exists
-    if (seekVideoId) {
+    // Check if hostVideoId already exists
+    if (hostVideoId) {
       const existingVideo = await db.video.findUnique({
-        where: { seekVideoId },
+        where: { hostVideoId },
       })
       if (existingVideo) {
         return NextResponse.json(
-          { error: 'فيديو SeekStreaming هذا موجود مسبقاً' },
+          { error: 'هذا الفيديو موجود مسبقاً' },
           { status: 409 }
         )
       }
@@ -109,9 +107,7 @@ export async function POST(request: NextRequest) {
         isFree,
         isPublished,
         isFeatured,
-        seekVideoId: seekVideoId || null,
-        seekStatus: seekStatus || null,
-        seekPlayerId: seekPlayerId || null,
+        hostVideoId: hostVideoId || null,
         embedUrl: embedUrl || null,
         categoryId: categoryId || null,
         userId: user.id,
