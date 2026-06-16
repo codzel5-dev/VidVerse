@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, FileVideo, X, Loader2, Check } from 'lucide-react'
+import { Upload, FileVideo, X, Loader2, Check, ImageIcon, RefreshCw } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,6 +48,10 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
   const [hostThumbnail, setHostThumbnail] = useState<string | null>(null)
   const [hostDeleteUrl, setHostDeleteUrl] = useState<string | null>(null)
 
+  // Custom thumbnail state
+  const [customThumbnail, setCustomThumbnail] = useState<string | null>(null)
+  const [isProcessingThumb, setIsProcessingThumb] = useState(false)
+
   const xhrRef = useRef<XMLHttpRequest | null>(null)
   const lastProgressRef = useRef({ bytes: 0, time: 0 })
 
@@ -82,6 +86,8 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
     setHostEmbedUrl(null)
     setHostThumbnail(null)
     setHostDeleteUrl(null)
+    setCustomThumbnail(null)
+    setIsProcessingThumb(false)
     xhrRef.current = null
     setTitle('')
     setDescription('')
@@ -214,7 +220,7 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
           isPublished,
           isFeatured,
           embedUrl: hostEmbedUrl,
-          thumbnail: hostThumbnail,
+          thumbnail: customThumbnail || hostThumbnail,
         }),
       })
 
@@ -256,6 +262,59 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
   }
+
+  // Process and compress thumbnail image on client side
+  const processThumbnail = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة')
+      return
+    }
+
+    setIsProcessingThumb(true)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        // Resize to max 1280x720, maintain aspect ratio
+        const maxW = 1280
+        const maxH = 720
+        let { width, height } = img
+
+        const ratio = Math.min(maxW / width, maxH / height, 1)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          setIsProcessingThumb(false)
+          toast.error('تعذر معالجة الصورة')
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        // Export as JPEG quality 0.85 for smaller size
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        setCustomThumbnail(dataUrl)
+        setIsProcessingThumb(false)
+        toast.success('تم تحميل الصورة المصغرة')
+      }
+      img.onerror = () => {
+        setIsProcessingThumb(false)
+        toast.error('تعذر تحميل الصورة')
+      }
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => {
+      setIsProcessingThumb(false)
+      toast.error('تعذر قراءة الملف')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const displayThumbnail = customThumbnail || hostThumbnail
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -378,17 +437,66 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
                 </div>
               )}
 
-              {/* Thumbnail preview */}
-              {hostThumbnail && (
-                <div className="rounded-xl overflow-hidden border border-[oklch(0.25_0.04_280)]">
-                  <img
-                    src={hostThumbnail}
-                    alt="Video thumbnail"
-                    className="w-full h-32 object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  />
+              {/* Thumbnail upload */}
+              <div className="space-y-2">
+                <Label className="text-[oklch(0.7_0.04_280)]">الصورة المصغرة</Label>
+                <div className="flex gap-3">
+                  {/* Preview */}
+                  <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[oklch(0.25_0.04_280)] bg-[oklch(0.08_0.02_280)] shrink-0">
+                    {displayThumbnail ? (
+                      <>
+                        <img
+                          src={displayThumbnail}
+                          alt="Thumbnail"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                        {isProcessingThumb && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 animate-spin text-white" />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="h-6 w-6 text-[oklch(0.4_0.03_280)]" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload controls */}
+                  <div className="flex-1 space-y-2">
+                    <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[oklch(0.627_0.265_303.9_/_0.15)] hover:bg-[oklch(0.627_0.265_303.9_/_0.25)] text-[oklch(0.827_0.165_303.9)] text-xs font-medium cursor-pointer transition-all">
+                      <Upload className="h-3.5 w-3.5" />
+                      <span>رفع صورة مخصصة</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) processThumbnail(file)
+                          e.target.value = ''
+                        }}
+                      />
+                    </label>
+                    {customThumbnail && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-[oklch(0.55_0.04_280)] hover:text-white p-0"
+                        onClick={() => setCustomThumbnail(null)}
+                      >
+                        <RefreshCw className="h-3 w-3 ml-1" />
+                        استخدام الصورة الافتراضية
+                      </Button>
+                    )}
+                    <p className="text-xs text-[oklch(0.4_0.03_280)]">
+                      {customThumbnail ? 'صورة مخصصة' : hostThumbnail ? 'صورة تلقائية من AnonMP4' : 'بدون صورة'}
+                    </p>
+                  </div>
                 </div>
-              )}
+              </div>
 
               {/* Title */}
               <div className="space-y-2">

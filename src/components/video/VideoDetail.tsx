@@ -171,7 +171,7 @@ export default function VideoDetail() {
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Player */}
-          <VideoPlayer embedUrl={video.embedUrl} title={video.title} />
+          <VideoPlayer embedUrl={video.embedUrl} title={video.title} thumbnail={video.thumbnail} />
 
           {/* Title & Info */}
           <div>

@@ -5,24 +5,7 @@ import VideoCard from '@/components/video/VideoCard'
 import SectionHeader from '@/components/common/SectionHeader'
 import EmptyState from '@/components/common/EmptyState'
 import { useAppStore } from '@/store/app-store'
-
-interface VideoData {
-  id: string
-  title: string
-  slug: string
-  shareCode: string
-  thumbnail: string | null
-  duration: number
-  views: number
-  isFree: boolean
-  isPublished: boolean
-  isFeatured: boolean
-  embedUrl: string | null
-  createdAt: string
-  user: { id: string; name: string; avatar: string | null }
-  category: { id: string; name: string; slug: string } | null
-  _count: { likes: number; comments: number }
-}
+import type { VideoData } from '@/hooks/useVideos'
 
 interface LatestVideosProps {
   initialVideos?: VideoData[]

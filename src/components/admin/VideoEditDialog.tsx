@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Upload, ImageIcon, RefreshCw } from 'lucide-react'
 import { useAppStore } from '@/store/app-store'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,8 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [prevVideoId, setPrevVideoId] = useState<string | null>(null)
+  const [isProcessingThumb, setIsProcessingThumb] = useState(false)
+  const [originalThumbnail, setOriginalThumbnail] = useState<string | null>(null)
 
   // Reset form when video changes
   if (video && video.id !== prevVideoId) {
@@ -56,6 +58,7 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
     setTitle(video.title || '')
     setDescription(video.description || '')
     setThumbnail(video.thumbnail || '')
+    setOriginalThumbnail(video.thumbnail || '')
     setCategoryId(video.categoryId || '')
     setIsFree(video.isFree)
     setIsPublished(video.isPublished)
@@ -150,16 +153,91 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
             />
           </div>
 
-          {/* Thumbnail URL */}
+          {/* Thumbnail upload */}
           <div className="space-y-2">
-            <Label className="text-[oklch(0.7_0.04_280)]">رابط الصورة المصغرة</Label>
-            <Input
-              value={thumbnail}
-              onChange={(e) => setThumbnail(e.target.value)}
-              placeholder="https://example.com/thumbnail.jpg"
-              className="input-aurora rounded-xl text-white placeholder:text-[oklch(0.4_0.03_280)]"
-              dir="ltr"
-            />
+            <Label className="text-[oklch(0.7_0.04_280)]">الصورة المصغرة</Label>
+            <div className="flex gap-3">
+              {/* Preview */}
+              <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[oklch(0.25_0.04_280)] bg-[oklch(0.08_0.02_280)] shrink-0">
+                {thumbnail ? (
+                  <>
+                    <img
+                      src={thumbnail}
+                      alt="Thumbnail"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                    {isProcessingThumb && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 animate-spin text-white" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="h-6 w-6 text-[oklch(0.4_0.03_280)]" />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload controls */}
+              <div className="flex-1 space-y-2">
+                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[oklch(0.627_0.265_303.9_/_0.15)] hover:bg-[oklch(0.627_0.265_303.9_/_0.25)] text-[oklch(0.827_0.165_303.9)] text-xs font-medium cursor-pointer transition-all">
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>رفع صورة مخصصة</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setIsProcessingThumb(true)
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const img = new Image()
+                          img.onload = () => {
+                            const maxW = 1280, maxH = 720
+                            let { width, height } = img
+                            const ratio = Math.min(maxW / width, maxH / height, 1)
+                            width = Math.round(width * ratio)
+                            height = Math.round(height * ratio)
+                            const canvas = document.createElement('canvas')
+                            canvas.width = width
+                            canvas.height = height
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) {
+                              ctx.drawImage(img, 0, 0, width, height)
+                              setThumbnail(canvas.toDataURL('image/jpeg', 0.85))
+                              toast.success('تم تحميل الصورة المصغرة')
+                            }
+                            setIsProcessingThumb(false)
+                          }
+                          img.onerror = () => { setIsProcessingThumb(false); toast.error('تعذر تحميل الصورة') }
+                          img.src = ev.target?.result as string
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                {originalThumbnail && thumbnail !== originalThumbnail && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-[oklch(0.55_0.04_280)] hover:text-white p-0"
+                    onClick={() => setThumbnail(originalThumbnail)}
+                  >
+                    <RefreshCw className="h-3 w-3 ml-1" />
+                    استعادة الصورة الأصلية
+                  </Button>
+                )}
+                <p className="text-xs text-[oklch(0.4_0.03_280)]">
+                  {thumbnail ? (thumbnail.startsWith('data:') ? 'صورة مخصصة' : 'صورة من رابط') : 'بدون صورة'}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Category */}

@@ -69,7 +69,15 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
       >
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-70 group-hover:opacity-90 transition-opacity duration-500`} />
+          {video.thumbnail ? (
+            <img
+              src={video.thumbnail}
+              alt={video.title}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-br ${pattern} opacity-70 group-hover:opacity-90 transition-opacity duration-500`} />
+          )}
           
           {/* Grid overlay pattern */}
           <div className="absolute inset-0 opacity-10" style={{
