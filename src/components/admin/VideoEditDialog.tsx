@@ -189,36 +189,87 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0]
-                      if (file) {
-                        setIsProcessingThumb(true)
-                        const reader = new FileReader()
-                        reader.onload = (ev) => {
-                          const img = new Image()
-                          img.onload = () => {
-                            const maxW = 1280, maxH = 720
-                            let { width, height } = img
-                            const ratio = Math.min(maxW / width, maxH / height, 1)
-                            width = Math.round(width * ratio)
-                            height = Math.round(height * ratio)
-                            const canvas = document.createElement('canvas')
-                            canvas.width = width
-                            canvas.height = height
-                            const ctx = canvas.getContext('2d')
-                            if (ctx) {
-                              ctx.drawImage(img, 0, 0, width, height)
-                              setThumbnail(canvas.toDataURL('image/jpeg', 0.85))
-                              toast.success('تم تحميل الصورة المصغرة')
-                            }
-                            setIsProcessingThumb(false)
-                          }
-                          img.onerror = () => { setIsProcessingThumb(false); toast.error('تعذر تحميل الصورة') }
-                          img.src = ev.target?.result as string
-                        }
-                        reader.readAsDataURL(file)
-                      }
                       e.target.value = ''
+                      if (!file) return
+
+                      if (!file.type.startsWith('image/')) {
+                        toast.error('يرجى اختيار ملف صورة')
+                        return
+                      }
+                      if (file.size > 8 * 1024 * 1024) {
+                        toast.error('حجم الصورة يجب ألا يتجاوز 8 ميجابايت')
+                        return
+                      }
+
+                      setIsProcessingThumb(true)
+                      try {
+                        // Step 1: Resize/compress locally (max 1280x720, JPEG 0.85)
+                        const resizedBlob = await new Promise<Blob | null>((resolve, reject) => {
+                          const reader = new FileReader()
+                          reader.onload = (ev) => {
+                            const img = new Image()
+                            img.onload = () => {
+                              const maxW = 1280, maxH = 720
+                              let { width, height } = img
+                              const ratio = Math.min(maxW / width, maxH / height, 1)
+                              width = Math.round(width * ratio)
+                              height = Math.round(height * ratio)
+                              const canvas = document.createElement('canvas')
+                              canvas.width = width
+                              canvas.height = height
+                              const ctx = canvas.getContext('2d')
+                              if (!ctx) {
+                                reject(new Error('تعذر معالجة الصورة'))
+                                return
+                              }
+                              ctx.drawImage(img, 0, 0, width, height)
+                              canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85)
+                            }
+                            img.onerror = () => reject(new Error('تعذر تحميل الصورة'))
+                            img.src = ev.target?.result as string
+                          }
+                          reader.onerror = () => reject(new Error('تعذر قراءة الملف'))
+                          reader.readAsDataURL(file)
+                        })
+
+                        if (!resizedBlob) throw new Error('تعذر ضغط الصورة')
+
+                        // Local preview immediately
+                        const localPreviewUrl = URL.createObjectURL(resizedBlob)
+                        setThumbnail(localPreviewUrl)
+
+                        // Step 2: Upload via our backend proxy -> picser.pages.dev
+                        const uploadForm = new FormData()
+                        const uploadFile = new File(
+                          [resizedBlob],
+                          file.name.replace(/\.[^/.]+$/, '') + '.jpg',
+                          { type: 'image/jpeg' }
+                        )
+                        uploadForm.append('file', uploadFile)
+
+                        const res = await fetch('/api/upload-image', {
+                          method: 'POST',
+                          body: uploadForm,
+                        })
+                        const data = await res.json()
+                        if (!res.ok || !data.success) {
+                          throw new Error(data.error || 'فشل رفع الصورة')
+                        }
+
+                        // Replace local preview with permanent CDN URL
+                        URL.revokeObjectURL(localPreviewUrl)
+                        setThumbnail(data.image.url)
+                        toast.success('تم رفع الصورة المصغرة بنجاح')
+                      } catch (error) {
+                        console.error('Thumbnail upload error:', error)
+                        // Restore original on failure
+                        setThumbnail(originalThumbnail || '')
+                        toast.error(error instanceof Error ? error.message : 'تعذر رفع الصورة')
+                      } finally {
+                        setIsProcessingThumb(false)
+                      }
                     }}
                   />
                 </label>
@@ -234,7 +285,11 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
                   </Button>
                 )}
                 <p className="text-xs text-[oklch(0.4_0.03_280)]">
-                  {thumbnail ? (thumbnail.startsWith('data:') ? 'صورة مخصصة' : 'صورة من رابط') : 'بدون صورة'}
+                  {thumbnail
+                    ? (thumbnail.startsWith('data:') || thumbnail.startsWith('blob:')
+                      ? 'جارٍ الرفع...'
+                      : 'صورة مرفوعة على CDN')
+                    : 'بدون صورة'}
                 </p>
               </div>
             </div>

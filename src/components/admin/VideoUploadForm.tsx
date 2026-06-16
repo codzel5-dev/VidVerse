@@ -263,55 +263,100 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
   }
 
-  // Process and compress thumbnail image on client side
-  const processThumbnail = (file: File) => {
+  // Process and compress thumbnail image on client side, then upload to /api/upload-image
+  // which forwards to picser.pages.dev (GitHub repo) and returns a direct CDN URL.
+  const processThumbnail = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('يرجى اختيار ملف صورة')
       return
     }
 
+    // 8 MB safety limit (matches backend)
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب ألا يتجاوز 8 ميجابايت')
+      return
+    }
+
     setIsProcessingThumb(true)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        // Resize to max 1280x720, maintain aspect ratio
-        const maxW = 1280
-        const maxH = 720
-        let { width, height } = img
 
-        const ratio = Math.min(maxW / width, maxH / height, 1)
-        width = Math.round(width * ratio)
-        height = Math.round(height * ratio)
+    try {
+      // Step 1: Resize/compress locally before upload (max 1280x720, JPEG 0.85)
+      // This keeps bandwidth low while still letting picser store a single final file.
+      const resizedBlob = await new Promise<Blob | null>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const img = new Image()
+          img.onload = () => {
+            const maxW = 1280
+            const maxH = 720
+            let { width, height } = img
+            const ratio = Math.min(maxW / width, maxH / height, 1)
+            width = Math.round(width * ratio)
+            height = Math.round(height * ratio)
 
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          setIsProcessingThumb(false)
-          toast.error('تعذر معالجة الصورة')
-          return
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            if (!ctx) {
+              reject(new Error('تعذر معالجة الصورة'))
+              return
+            }
+            ctx.drawImage(img, 0, 0, width, height)
+            canvas.toBlob(
+              (blob) => resolve(blob),
+              'image/jpeg',
+              0.85
+            )
+          }
+          img.onerror = () => reject(new Error('تعذر تحميل الصورة'))
+          img.src = e.target?.result as string
         }
+        reader.onerror = () => reject(new Error('تعذر قراءة الملف'))
+        reader.readAsDataURL(file)
+      })
 
-        ctx.drawImage(img, 0, 0, width, height)
-        // Export as JPEG quality 0.85 for smaller size
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
-        setCustomThumbnail(dataUrl)
-        setIsProcessingThumb(false)
-        toast.success('تم تحميل الصورة المصغرة')
+      if (!resizedBlob) {
+        throw new Error('تعذر ضغط الصورة')
       }
-      img.onerror = () => {
-        setIsProcessingThumb(false)
-        toast.error('تعذر تحميل الصورة')
+
+      // Show local preview immediately for responsiveness
+      const localPreviewUrl = URL.createObjectURL(resizedBlob)
+      setCustomThumbnail(localPreviewUrl)
+
+      // Step 2: Upload to our backend proxy which forwards to picser.pages.dev
+      const uploadForm = new FormData()
+      // Preserve a friendly name with .jpg extension so the upstream service keeps the right mime
+      const uploadFile = new File(
+        [resizedBlob],
+        file.name.replace(/\.[^/.]+$/, '') + '.jpg',
+        { type: 'image/jpeg' }
+      )
+      uploadForm.append('file', uploadFile)
+
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: uploadForm,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'فشل رفع الصورة')
       }
-      img.src = e.target?.result as string
-    }
-    reader.onerror = () => {
+
+      // Step 3: Replace local preview with the permanent CDN URL
+      URL.revokeObjectURL(localPreviewUrl)
+      setCustomThumbnail(data.image.url)
+      toast.success('تم رفع الصورة المصغرة بنجاح')
+    } catch (error) {
+      console.error('Thumbnail upload error:', error)
+      // Clear preview on error so the user knows it didn't go through
+      setCustomThumbnail(null)
+      toast.error(error instanceof Error ? error.message : 'تعذر رفع الصورة')
+    } finally {
       setIsProcessingThumb(false)
-      toast.error('تعذر قراءة الملف')
     }
-    reader.readAsDataURL(file)
   }
 
   const displayThumbnail = customThumbnail || hostThumbnail
