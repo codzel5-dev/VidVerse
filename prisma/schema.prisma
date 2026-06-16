@@ -93,9 +93,8 @@ model Video {
   isPublished     Boolean   @default(false)
   isFeatured      Boolean   @default(false)
 
-  seekVideoId     String?   @unique
-  seekStatus      String?
-  seekPlayerId    String?
+  hostVideoId     String?   @unique
+  hostStatus      String?
   embedUrl        String?
 
   categoryId      String?

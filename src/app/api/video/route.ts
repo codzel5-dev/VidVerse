@@ -123,9 +123,7 @@ export async function POST(request: NextRequest) {
       isPublished,
       isFeatured,
       categoryId,
-      seekVideoId,
-      seekStatus,
-      seekPlayerId,
+      hostVideoId,
       embedUrl,
       tagIds,
     } = body
@@ -158,9 +156,7 @@ export async function POST(request: NextRequest) {
         isFeatured: isFeatured ?? false,
         categoryId,
         userId,
-        seekVideoId,
-        seekStatus,
-        seekPlayerId,
+        hostVideoId,
         embedUrl,
         videoTags: tagIds
           ? {
