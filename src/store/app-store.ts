@@ -11,6 +11,7 @@ interface AppState {
   searchQuery: string
   sidebarOpen: boolean
   activeCategory: string | null
+  videoListVersion: number
 
   setView: (view: ViewType) => void
   setSelectedVideoId: (id: string | null) => void
@@ -18,6 +19,7 @@ interface AppState {
   setSearchQuery: (query: string) => void
   setSidebarOpen: (open: boolean) => void
   setActiveCategory: (category: string | null) => void
+  bumpVideoListVersion: () => void
   navigateToVideo: (id: string) => void
   navigateToCourse: (id: string) => void
   navigateToSearch: (query: string) => void
@@ -31,6 +33,7 @@ export const useAppStore = create<AppState>()((set) => ({
   searchQuery: '',
   sidebarOpen: false,
   activeCategory: null,
+  videoListVersion: 0,
 
   setView: (view) => set({ currentView: view }),
   setSelectedVideoId: (id) => set({ selectedVideoId: id }),
@@ -38,6 +41,7 @@ export const useAppStore = create<AppState>()((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveCategory: (category) => set({ activeCategory: category }),
+  bumpVideoListVersion: () => set((s) => ({ videoListVersion: s.videoListVersion + 1 })),
 
   navigateToVideo: (id) => {
     set({ currentView: 'video', selectedVideoId: id })

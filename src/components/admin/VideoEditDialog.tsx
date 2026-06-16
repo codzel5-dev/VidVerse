@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -101,6 +102,7 @@ export default function VideoEditDialog({ open, onOpenChange, video, onVideoUpda
       }
 
       toast.success('تم تحديث الفيديو بنجاح')
+      useAppStore.getState().bumpVideoListVersion()
       onVideoUpdated()
       onOpenChange(false)
     } catch (error) {

@@ -79,6 +79,7 @@ export default function VideoManager() {
       const res = await fetch(`/api/video/${id}`, { method: 'DELETE', headers })
       if (res.ok) {
         setVideos((prev) => prev.filter((v) => v.id !== id))
+        useAppStore.getState().bumpVideoListVersion()
         toast.success('تم حذف الفيديو')
       } else {
         const data = await res.json()

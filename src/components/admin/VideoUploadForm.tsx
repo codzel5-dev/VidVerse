@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/store/auth-store'
+import { useAppStore } from '@/store/app-store'
 import { toast } from 'sonner'
 
 interface Category {
@@ -224,6 +225,8 @@ export default function VideoUploadForm({ open, onOpenChange, onVideoCreated }: 
       }
 
       toast.success('تم إنشاء الفيديو بنجاح')
+      // Bump global video list version so homepage refetches
+      useAppStore.getState().bumpVideoListVersion()
       onVideoCreated()
       handleClose()
     } catch (error) {
