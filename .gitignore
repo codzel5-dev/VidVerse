@@ -71,3 +71,8 @@ worklog.md
 # prisma config for custom db path
 prisma.config.ts
 .env
+dev.pid
+spawn-dev.js
+start-dev.sh
+home-*.html
+verify.html

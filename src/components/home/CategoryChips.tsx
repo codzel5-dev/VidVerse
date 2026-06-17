@@ -95,7 +95,7 @@ export default function CategoryChips({ categories }: CategoryChipsProps) {
   }
 
   return (
-    <div className="sticky top-16 z-30 bg-[oklch(0.08_0.02_280_/_0.85)] backdrop-blur-xl border-b border-[oklch(0.20_0.03_280)]">
+    <div className="sticky top-16 z-30 bg-[oklch(0.08_0.02_280_/_0.85)] backdrop-blur-xl border-b border-[oklch(0.20_0.03_280)] lg:hidden">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         <div className="relative flex items-center gap-1 py-3">
           {/* Left scroll button (RTL: points right) */}

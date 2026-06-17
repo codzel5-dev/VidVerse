@@ -96,14 +96,21 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          x: sidebarOpen ? 0 : 320,
-        }}
-        transition={{ type: 'spring', damping: 28, stiffness: 240 }}
-        className="fixed top-16 right-0 bottom-0 w-72 bg-[oklch(0.10_0.025_280)] border-l border-[oklch(0.20_0.03_280)] z-50 lg:static lg:translate-x-0 lg:z-auto lg:bg-transparent lg:border-0"
+      {/*
+        Sidebar — uses CSS transitions (not framer-motion) for the slide
+        animation. This avoids the inline `transform` conflict that prevented
+        the sidebar from being visible on desktop.
+
+        - Mobile: fixed drawer, translate-x-full when closed / translate-x-0 when open
+        - Desktop (lg): lg:static + lg:translate-x-0 keeps it always visible
+        - transition-transform provides the smooth slide effect
+      */}
+      <aside
+        className={cn(
+          'fixed top-16 right-0 bottom-0 w-72 bg-[oklch(0.10_0.025_280)] border-l border-[oklch(0.20_0.03_280)] z-50 transition-transform duration-300 ease-out',
+          sidebarOpen ? 'translate-x-0' : 'translate-x-full',
+          'lg:static lg:z-auto lg:translate-x-0 lg:bg-transparent lg:border-0 lg:w-64 lg:transition-none'
+        )}
       >
         <div className="flex items-center justify-between p-4 lg:hidden">
           <h3 className="font-semibold text-white">القوائم</h3>
@@ -270,7 +277,7 @@ export default function Sidebar() {
             </div>
           </div>
         </ScrollArea>
-      </motion.aside>
+      </aside>
     </>
   )
 }
