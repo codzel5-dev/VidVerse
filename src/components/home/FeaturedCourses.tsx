@@ -5,8 +5,27 @@ import SectionHeader from '@/components/common/SectionHeader'
 import EmptyState from '@/components/common/EmptyState'
 import { useAppStore } from '@/store/app-store'
 
+interface CourseItem {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  thumbnail: string | null
+  price: number
+  isFree: boolean
+  isPublished: boolean
+  level: string | null
+  userId: string
+  createdAt: string
+  user: { id: string; name: string; avatar: string | null }
+  category: { id: string; name: string; slug: string } | null
+  lessons: { id: string }[]
+  _count: { enrollments: number }
+  [key: string]: unknown
+}
+
 interface FeaturedCoursesProps {
-  initialCourses?: any[]
+  initialCourses?: CourseItem[]
 }
 
 export default function FeaturedCourses({ initialCourses = [] }: FeaturedCoursesProps) {

@@ -4,7 +4,9 @@ import HomeClient from '@/components/HomeClient'
 export const dynamic = 'force-dynamic'
 
 async function getInitialData() {
-  const [videos, courses, categories, stats] = await Promise.all([
+  const now = new Date()
+
+  const [videos, courses, categories, banners, stats] = await Promise.all([
     db.video.findMany({
       where: { isPublished: true },
       include: {
@@ -14,7 +16,7 @@ async function getInitialData() {
         _count: { select: { likes: true, comments: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 12,
+      take: 24,
     }),
     db.course.findMany({
       where: { isPublished: true },
@@ -33,12 +35,28 @@ async function getInitialData() {
       include: { _count: { select: { videos: true, courses: true } } },
       orderBy: { order: 'asc' },
     }),
+    db.adBanner.findMany({
+      where: {
+        isActive: true,
+        AND: [
+          {
+            OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+          },
+          {
+            OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+          },
+        ],
+      },
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+    }),
     {
       totalVideos: db.video.count({ where: { isPublished: true } }),
       totalUsers: db.user.count(),
-      totalViews: db.video.aggregate({ _sum: { views: true } }).then(r => r._sum.views || 0),
+      totalViews: db.video.aggregate({ _sum: { views: true } }).then((r) => r._sum.views || 0),
       totalCourses: db.course.count({ where: { isPublished: true } }),
-      totalRevenue: db.order.aggregate({ _sum: { amount: true }, where: { status: 'completed' } }).then(r => r._sum.amount || 0),
+      totalRevenue: db.order
+        .aggregate({ _sum: { amount: true }, where: { status: 'completed' } })
+        .then((r) => r._sum.amount || 0),
       freeVideos: db.video.count({ where: { isPublished: true, isFree: true } }),
       featuredVideos: db.video.count({ where: { isPublished: true, isFeatured: true } }),
     },
@@ -54,7 +72,7 @@ async function getInitialData() {
     featuredVideos: await stats.featuredVideos,
   }
 
-  return { videos, courses, categories, stats: statsResolved }
+  return { videos, courses, categories, banners, stats: statsResolved }
 }
 
 export default async function Home() {

@@ -287,3 +287,21 @@ model SiteSettings {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model AdBanner {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  imageUrl    String?
+  videoUrl    String?
+  linkUrl     String?
+  buttonText  String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
