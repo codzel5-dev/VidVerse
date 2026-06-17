@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Mail,
@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Edit,
+  BookmarkX,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -19,7 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthStore } from '@/store/auth-store'
 import { useAppStore } from '@/store/app-store'
-import { useVideos } from '@/hooks/useVideos'
+import { useVideos, type VideoData } from '@/hooks/useVideos'
 import VideoCard from '@/components/video/VideoCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { toast } from 'sonner'
@@ -27,6 +28,7 @@ import { toast } from 'sonner'
 export default function ProfilePage() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const setView = useAppStore((s) => s.setView)
+  const profileTab = useAppStore((s) => s.profileTab)
   const [profileData, setProfileData] = useState<{
     _count: { videos: number; enrollments: number; savedVideos: number }
   } | null>(null)
@@ -119,7 +121,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Content tabs */}
-      <Tabs defaultValue="videos" className="w-full">
+      <Tabs value={profileTab} onValueChange={(v) => useAppStore.getState().setProfileTab(v as 'videos' | 'courses' | 'saved')} className="w-full">
         <TabsList className="w-full justify-start rounded-2xl bg-[oklch(0.13_0.028_280)] border border-[oklch(0.25_0.04_280)] p-1 h-auto">
           <TabsTrigger value="videos" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             <Video className="h-4 w-4 ml-1.5" />
@@ -142,9 +144,7 @@ export default function ProfilePage() {
           <ProfileCourses userId={user.id} />
         </TabsContent>
         <TabsContent value="saved" className="mt-4">
-          <div className="text-center py-8 text-[oklch(0.55_0.04_280)]">
-            لا توجد فيديوهات محفوظة بعد
-          </div>
+          <ProfileSavedVideos userId={user.id} />
         </TabsContent>
       </Tabs>
 
@@ -220,6 +220,137 @@ function ProfileCourses({ userId }: { userId: string }) {
   return (
     <div className="text-center py-8 text-[oklch(0.55_0.04_280)]">
      عرض الكورسات المسجل بها
+    </div>
+  )
+}
+
+interface SavedVideoItem {
+  id: string
+  userId: string
+  videoId: string
+  createdAt: string
+  video: VideoData
+}
+
+function ProfileSavedVideos({ userId }: { userId: string }) {
+  const [savedVideos, setSavedVideos] = useState<SavedVideoItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const doFetch = async () => {
+      try {
+        const res = await fetch(`/api/user/${userId}/saved?limit=24`, {
+          headers: { 'x-user-id': userId },
+        })
+        if (!res.ok) throw new Error('فشل في جلب الفيديوهات المحفوظة')
+        const data = await res.json()
+        if (!cancelled) {
+          setSavedVideos(data.savedVideos || [])
+          setError(null)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب المحفوظات')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    doFetch()
+    return () => { cancelled = true }
+  }, [userId])
+
+  const refetch = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/user/${userId}/saved?limit=24`, {
+        headers: { 'x-user-id': userId },
+      })
+      if (!res.ok) throw new Error('فشل في جلب الفيديوهات المحفوظة')
+      const data = await res.json()
+      setSavedVideos(data.savedVideos || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب المحفوظات')
+    } finally {
+      setLoading(false)
+    }
+  }, [userId])
+
+  const handleRemove = async (videoId: string, identifier: string) => {
+    try {
+      const res = await fetch(`/api/video/${identifier}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+      })
+      if (!res.ok) throw new Error('فشل إزالة الفيديو من المحفوظات')
+      const data = await res.json()
+      if (data.action === 'unsaved') {
+        setSavedVideos((prev) => prev.filter((s) => s.videoId !== videoId))
+        toast.success('تمت إزالة الفيديو من المحفوظات')
+      }
+    } catch {
+      toast.error('تعذرت إزالة الفيديو من المحفوظات')
+    }
+  }
+
+  if (loading) return <LoadingSpinner />
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-[oklch(0.745_0.166_16.4)]">
+        {error}
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="rounded-xl border-[oklch(0.25_0.04_280)] bg-transparent text-white hover:bg-[oklch(0.18_0.03_280)]"
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (savedVideos.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-2xl bg-[oklch(0.627_0.265_303.9_/_0.1)] flex items-center justify-center mx-auto mb-4">
+          <Bookmark className="h-8 w-8 text-[oklch(0.827_0.165_303.9)]" />
+        </div>
+        <p className="text-[oklch(0.55_0.04_280)] mb-1">لا توجد فيديوهات محفوظة بعد</p>
+        <p className="text-xs text-[oklch(0.45_0.03_280)]">
+          احفظ الفيديوهات التي تعجبك لتجدها هنا لاحقاً
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {savedVideos.map((item, index) => {
+        const identifier = item.video.shareCode || item.video.id
+        return (
+          <div key={item.id} className="relative group">
+            <VideoCard video={item.video} index={index} />
+            <button
+              onClick={() => handleRemove(item.videoId, identifier)}
+              title="إزالة من المحفوظات"
+              className="absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[oklch(0.645_0.246_16.4_/_0.8)]"
+              aria-label="إزالة من المحفوظات"
+            >
+              <BookmarkX className="h-4 w-4" />
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }

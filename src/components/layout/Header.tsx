@@ -29,17 +29,23 @@ import { useAppStore } from '@/store/app-store'
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { setView, goHome } = useAppStore()
+  const { setView, goHome, navigateToProfileTab } = useAppStore()
 
   const navItems = [
     { label: 'الرئيسية', view: 'home' as const, icon: Play },
     { label: 'الفيديوهات', view: 'home' as const, icon: Video },
-    { label: 'المحفوظات', view: 'home' as const, icon: Bookmark },
+    { label: 'المحفوظات', view: 'saved' as const, icon: Bookmark },
   ]
 
   const handleNavClick = (view: string) => {
-    if (view === 'home') goHome()
-    else setView(view as 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register')
+    if (view === 'home') {
+      goHome()
+    } else if (view === 'saved') {
+      // فتح تبويب المحفوظات في صفحة البروفايل
+      navigateToProfileTab('saved')
+    } else {
+      setView(view as 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register')
+    }
     setMobileMenuOpen(false)
   }
 
@@ -111,7 +117,7 @@ export default function Header() {
                     <User className="h-4 w-4 ml-2" />
                     <span>الملف الشخصي</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
+                  <DropdownMenuItem onClick={() => navigateToProfileTab('saved')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
                     <Bookmark className="h-4 w-4 ml-2" />
                     <span>المحفوظات</span>
                   </DropdownMenuItem>

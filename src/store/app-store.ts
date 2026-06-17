@@ -12,6 +12,7 @@ interface AppState {
   sidebarOpen: boolean
   activeCategory: string | null
   videoListVersion: number
+  profileTab: 'videos' | 'courses' | 'saved'
 
   setView: (view: ViewType) => void
   setSelectedVideoId: (id: string | null) => void
@@ -24,6 +25,8 @@ interface AppState {
   navigateToCourse: (id: string) => void
   navigateToSearch: (query: string) => void
   goHome: () => void
+  setProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
+  navigateToProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -34,6 +37,7 @@ export const useAppStore = create<AppState>()((set) => ({
   sidebarOpen: false,
   activeCategory: null,
   videoListVersion: 0,
+  profileTab: 'videos',
 
   setView: (view) => set({ currentView: view }),
   setSelectedVideoId: (id) => set({ selectedVideoId: id }),
@@ -42,6 +46,8 @@ export const useAppStore = create<AppState>()((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveCategory: (category) => set({ activeCategory: category }),
   bumpVideoListVersion: () => set((s) => ({ videoListVersion: s.videoListVersion + 1 })),
+  setProfileTab: (tab) => set({ profileTab: tab }),
+  navigateToProfileTab: (tab) => set({ currentView: 'profile', profileTab: tab }),
 
   navigateToVideo: (id) => {
     set({ currentView: 'video', selectedVideoId: id })
