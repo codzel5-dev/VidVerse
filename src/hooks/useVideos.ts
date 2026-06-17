@@ -39,6 +39,7 @@ interface UseVideosOptions {
   sort?: string
   search?: string
   free?: boolean
+  userId?: string
 }
 
 export function useVideos(options: UseVideosOptions = {}) {
@@ -58,6 +59,7 @@ export function useVideos(options: UseVideosOptions = {}) {
       if (options.sort) params.set('sort', options.sort)
       if (options.search) params.set('search', options.search)
       if (options.free) params.set('free', 'true')
+      if (options.userId) params.set('userId', options.userId)
 
       const res = await fetch(`/api/video?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to fetch videos')
@@ -69,7 +71,7 @@ export function useVideos(options: UseVideosOptions = {}) {
     } finally {
       setLoading(false)
     }
-  }, [options.page, options.limit, options.category, options.sort, options.search, options.free])
+  }, [options.page, options.limit, options.category, options.sort, options.search, options.free, options.userId])
 
   useEffect(() => {
     let cancelled = false
@@ -84,6 +86,7 @@ export function useVideos(options: UseVideosOptions = {}) {
         if (options.sort) params.set('sort', options.sort)
         if (options.search) params.set('search', options.search)
         if (options.free) params.set('free', 'true')
+        if (options.userId) params.set('userId', options.userId)
 
         const res = await fetch(`/api/video?${params.toString()}`)
         if (!res.ok) throw new Error('Failed to fetch videos')
@@ -100,7 +103,7 @@ export function useVideos(options: UseVideosOptions = {}) {
     }
     doFetch()
     return () => { cancelled = true }
-  }, [options.page, options.limit, options.category, options.sort, options.search, options.free])
+  }, [options.page, options.limit, options.category, options.sort, options.search, options.free, options.userId])
 
   return { videos, pagination, loading, error, refetch: fetchVideos }
 }

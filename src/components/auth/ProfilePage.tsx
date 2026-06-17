@@ -138,7 +138,7 @@ export default function ProfilePage() {
         </TabsList>
 
         <TabsContent value="videos" className="mt-4">
-          <ProfileVideos />
+          <ProfileVideos userId={user.id} />
         </TabsContent>
         <TabsContent value="courses" className="mt-4">
           <ProfileCourses userId={user.id} />
@@ -173,22 +173,36 @@ export default function ProfilePage() {
   )
 }
 
-function ProfileVideos() {
-  const { videos, loading } = useVideos({ limit: 12 })
+function ProfileVideos({ userId }: { userId: string }) {
+  const { videos, loading, error } = useVideos({ limit: 24, userId })
 
   if (loading) return <LoadingSpinner />
 
+  if (error) {
+    return (
+      <div className="text-center py-12 text-[oklch(0.745_0.166_16.4)]">
+        حدث خطأ أثناء جلب فيديوهاتك
+      </div>
+    )
+  }
+
   if (videos.length === 0) {
     return (
-      <div className="text-center py-8 text-[oklch(0.55_0.04_280)]">
-        لم يتم رفع فيديوهات بعد
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-2xl bg-[oklch(0.627_0.265_303.9_/_0.1)] flex items-center justify-center mx-auto mb-4">
+          <Video className="h-8 w-8 text-[oklch(0.827_0.165_303.9)]" />
+        </div>
+        <p className="text-[oklch(0.55_0.04_280)] mb-1">لم تقم برفع أي فيديو بعد</p>
+        <p className="text-xs text-[oklch(0.45_0.03_280)]">
+          ابدأ بمشاركة معرفتك مع المجتمع
+        </p>
       </div>
     )
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {videos.slice(0, 6).map((video, index) => (
+      {videos.map((video, index) => (
         <VideoCard key={video.id} video={video} index={index} />
       ))}
     </div>

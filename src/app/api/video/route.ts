@@ -35,11 +35,19 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const sort = searchParams.get('sort') || 'newest'
     const isFree = searchParams.get('free')
+    const userId = searchParams.get('userId')
 
     const skip = (page - 1) * limit
 
-    const where: Prisma.VideoWhereInput = {
-      isPublished: true,
+    const where: Prisma.VideoWhereInput = {}
+
+    // إذا طُلب فلتر userId، نرجع فيديوهات هذا المستخدم فقط (منشورة أو لا)
+    // هذا يُستخدم في صفحة "فيديوهاتي" لعرض ما رفعه المستخدم نفسه
+    if (userId) {
+      where.userId = userId
+    } else {
+      // الوضع الافتراضي: فقط الفيديوهات المنشورة للجميع
+      where.isPublished = true
     }
 
     if (categoryId) {
