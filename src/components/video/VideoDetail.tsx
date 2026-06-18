@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   ThumbsUp,
@@ -52,6 +52,50 @@ export default function VideoDetail() {
   const [isLiked, setIsLiked] = useState(false)
   const [isDisliked, setIsDisliked] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+
+  // Track view count once per video per session to prevent inflation
+  const viewedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!video || !selectedVideoId) return
+    // Only logged-in users can actually watch (VideoPlayer shows login gate otherwise)
+    if (!user) return
+    // Only count when the video is actually playable
+    if (!video.embedUrl) return
+    // Avoid double counting the same video in this component instance
+    if (viewedRef.current === selectedVideoId) return
+
+    // Avoid double counting the same video within the same browser session
+    try {
+      const viewedKey = `vidviewed:${selectedVideoId}`
+      if (sessionStorage.getItem(viewedKey)) {
+        viewedRef.current = selectedVideoId
+        return
+      }
+      sessionStorage.setItem(viewedKey, '1')
+    } catch {
+      // sessionStorage may be unavailable (private mode) — fall through
+    }
+
+    viewedRef.current = selectedVideoId
+
+    // Fire-and-forget view increment
+    const headers: HeadersInit = { 'Content-Type': 'application/json' }
+    if (user.id) headers['x-user-id'] = user.id
+
+    fetch(`/api/video/${selectedVideoId}/view`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ progress: 0, lastPosition: 0 }),
+    })
+      .then(() => {
+        // Refetch to update the displayed view count
+        refetch()
+      })
+      .catch(() => {
+        // Silently fail — view tracking must not break UX
+      })
+  }, [video, selectedVideoId, user, refetch])
 
   const handleLike = async () => {
     if (!user) { toast.error('يرجى تسجيل الدخول أولاً'); return }
