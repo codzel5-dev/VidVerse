@@ -174,11 +174,12 @@ function HomeView({ data }: { data: InitialData }) {
 
 function ViewRenderer({ data }: { data: InitialData }) {
   const currentView = useAppStore((s) => s.currentView)
+  const selectedUserId = useAppStore((s) => s.selectedUserId)
 
   return (
     <AnimatePresence mode="wait">
       <motion.main
-        key={currentView}
+        key={currentView + (selectedUserId || '')}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
@@ -198,7 +199,7 @@ function ViewRenderer({ data }: { data: InitialData }) {
         )}
         {currentView === 'profile' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <ProfilePage />
+            <ProfilePage userId={selectedUserId} />
           </div>
         )}
         {currentView === 'admin' && (
@@ -227,6 +228,7 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
   const setView = useAppStore((s) => s.setView)
   const setSelectedVideoId = useAppStore((s) => s.setSelectedVideoId)
   const setSelectedCourseId = useAppStore((s) => s.setSelectedCourseId)
+  const setSelectedUserId = useAppStore((s) => s.setSelectedUserId)
   const setSearchQuery = useAppStore((s) => s.setSearchQuery)
 
   // Initialize from URL parameters on mount
@@ -234,6 +236,7 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
     const params = new URLSearchParams(window.location.search)
     const videoCode = params.get('v')
     const courseCode = params.get('c')
+    const userCode = params.get('u')
     const search = params.get('q')
 
     if (videoCode) {
@@ -242,6 +245,9 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
     } else if (courseCode) {
       setSelectedCourseId(courseCode)
       setView('course')
+    } else if (userCode) {
+      setSelectedUserId(userCode)
+      setView('profile')
     } else if (search) {
       setSearchQuery(search)
       setView('search')
@@ -254,6 +260,7 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
       const params = new URLSearchParams(window.location.search)
       const videoCode = params.get('v')
       const courseCode = params.get('c')
+      const userCode = params.get('u')
       const search = params.get('q')
 
       if (videoCode) {
@@ -262,6 +269,9 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
       } else if (courseCode) {
         setSelectedCourseId(courseCode)
         setView('course')
+      } else if (userCode) {
+        setSelectedUserId(userCode)
+        setView('profile')
       } else if (search) {
         setSearchQuery(search)
         setView('search')
@@ -269,6 +279,7 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
         setView('home')
         setSelectedVideoId(null)
         setSelectedCourseId(null)
+        setSelectedUserId(null)
       }
     }
 

@@ -51,10 +51,19 @@ const thumbnailPatterns = [
 
 export default function VideoCard({ video, index = 0 }: VideoCardProps) {
   const navigateToVideo = useAppStore((s) => s.navigateToVideo)
+  const navigateToProfile = useAppStore((s) => s.navigateToProfile)
   const pattern = thumbnailPatterns[index % thumbnailPatterns.length]
 
   // Use shareCode for navigation (YouTube-style URL), fallback to id
   const videoIdentifier = video.shareCode || video.id
+
+  // Stop click propagation so clicking the creator doesn't open the video
+  const handleCreatorClick = (e: React.MouseEvent) => {
+    if (video.user?.id) {
+      e.stopPropagation()
+      navigateToProfile(video.user.id)
+    }
+  }
 
   return (
     <motion.div
@@ -116,12 +125,20 @@ export default function VideoCard({ video, index = 0 }: VideoCardProps) {
           </h3>
 
           <div className="flex items-center gap-2 mb-2.5">
-            <Avatar className="h-6 w-6 border border-[oklch(0.627_0.265_303.9_/_0.3)]">
-              <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] text-[10px] font-semibold">
-                {video.user?.name?.charAt(0) || 'م'}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs text-[oklch(0.55_0.04_280)]">{video.user?.name || 'مجهول'}</span>
+            <button
+              onClick={handleCreatorClick}
+              className="flex items-center gap-2 group/creator"
+              aria-label={`عرض ملف ${video.user?.name || 'المستخدم'}`}
+            >
+              <Avatar className="h-6 w-6 border border-[oklch(0.627_0.265_303.9_/_0.3)] group-hover/creator:border-[oklch(0.627_0.265_303.9_/_0.6)] transition-colors">
+                <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] text-[10px] font-semibold">
+                  {video.user?.name?.charAt(0) || 'م'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-[oklch(0.55_0.04_280)] group-hover/creator:text-[oklch(0.827_0.165_303.9)] group-hover/creator:underline transition-colors">
+                {video.user?.name || 'مجهول'}
+              </span>
+            </button>
           </div>
 
           <div className="flex items-center justify-between">

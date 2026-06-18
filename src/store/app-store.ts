@@ -8,6 +8,7 @@ interface AppState {
   currentView: ViewType
   selectedVideoId: string | null
   selectedCourseId: string | null
+  selectedUserId: string | null
   searchQuery: string
   sidebarOpen: boolean
   activeCategory: string | null
@@ -17,6 +18,7 @@ interface AppState {
   setView: (view: ViewType) => void
   setSelectedVideoId: (id: string | null) => void
   setSelectedCourseId: (id: string | null) => void
+  setSelectedUserId: (id: string | null) => void
   setSearchQuery: (query: string) => void
   setSidebarOpen: (open: boolean) => void
   setActiveCategory: (category: string | null) => void
@@ -24,6 +26,7 @@ interface AppState {
   navigateToVideo: (id: string) => void
   navigateToCourse: (id: string) => void
   navigateToSearch: (query: string) => void
+  navigateToProfile: (userId: string) => void
   goHome: () => void
   setProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
   navigateToProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
@@ -33,6 +36,7 @@ export const useAppStore = create<AppState>()((set) => ({
   currentView: 'home',
   selectedVideoId: null,
   selectedCourseId: null,
+  selectedUserId: null,
   searchQuery: '',
   sidebarOpen: false,
   activeCategory: null,
@@ -42,6 +46,7 @@ export const useAppStore = create<AppState>()((set) => ({
   setView: (view) => set({ currentView: view }),
   setSelectedVideoId: (id) => set({ selectedVideoId: id }),
   setSelectedCourseId: (id) => set({ selectedCourseId: id }),
+  setSelectedUserId: (id) => set({ selectedUserId: id }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveCategory: (category) => set({ activeCategory: category }),
@@ -55,6 +60,7 @@ export const useAppStore = create<AppState>()((set) => ({
     const url = new URL(window.location.href)
     url.searchParams.set('v', id)
     url.searchParams.delete('c')
+    url.searchParams.delete('u')
     window.history.pushState({}, '', url.toString())
   },
   navigateToCourse: (id) => {
@@ -62,6 +68,16 @@ export const useAppStore = create<AppState>()((set) => ({
     const url = new URL(window.location.href)
     url.searchParams.set('c', id)
     url.searchParams.delete('v')
+    url.searchParams.delete('u')
+    window.history.pushState({}, '', url.toString())
+  },
+  navigateToProfile: (userId) => {
+    set({ currentView: 'profile', selectedUserId: userId, profileTab: 'videos' })
+    // Update browser URL to ?u=USER_ID
+    const url = new URL(window.location.href)
+    url.searchParams.set('u', userId)
+    url.searchParams.delete('v')
+    url.searchParams.delete('c')
     window.history.pushState({}, '', url.toString())
   },
   navigateToSearch: (query) =>
@@ -71,12 +87,14 @@ export const useAppStore = create<AppState>()((set) => ({
       currentView: 'home',
       selectedVideoId: null,
       selectedCourseId: null,
+      selectedUserId: null,
       searchQuery: '',
       activeCategory: null,
     })
     const url = new URL(window.location.href)
     url.searchParams.delete('v')
     url.searchParams.delete('c')
+    url.searchParams.delete('u')
     window.history.pushState({}, '', url.toString())
   },
 }))

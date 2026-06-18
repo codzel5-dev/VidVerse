@@ -58,6 +58,7 @@ export default function Sidebar() {
     goHome,
     setView,
     navigateToProfileTab,
+    navigateToProfile,
   } = useAppStore() as {
     sidebarOpen: boolean
     setSidebarOpen: (open: boolean) => void
@@ -67,6 +68,7 @@ export default function Sidebar() {
     goHome: () => void
     setView: (v: 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register') => void
     navigateToProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
+    navigateToProfile: (userId: string) => void
   }
   const { categories, loading } = useCategories()
   const { user } = useAuthStore()
@@ -242,7 +244,7 @@ export default function Sidebar() {
                   icon={User}
                   label="الملف الشخصي"
                   onClick={() => {
-                    setView('profile')
+                    navigateToProfile(user.id)
                     setSidebarOpen(false)
                   }}
                 />

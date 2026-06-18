@@ -29,7 +29,7 @@ import { useAppStore } from '@/store/app-store'
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { setView, goHome, navigateToProfileTab } = useAppStore()
+  const { setView, goHome, navigateToProfileTab, navigateToProfile } = useAppStore()
 
   const navItems = [
     { label: 'الرئيسية', view: 'home' as const, icon: Play },
@@ -113,7 +113,7 @@ export default function Header() {
                   </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl bg-[oklch(0.13_0.028_280)] border-[oklch(0.25_0.04_280)]">
-                  <DropdownMenuItem onClick={() => setView('profile')} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
+                  <DropdownMenuItem onClick={() => user && navigateToProfile(user.id)} className="rounded-xl cursor-pointer text-[oklch(0.85_0.02_280)] focus:bg-[oklch(0.627_0.265_303.9_/_0.1)] focus:text-white">
                     <User className="h-4 w-4 ml-2" />
                     <span>الملف الشخصي</span>
                   </DropdownMenuItem>
@@ -181,7 +181,7 @@ export default function Header() {
                   {isAuthenticated && user && (
                     <>
                       <button
-                        onClick={() => { setView('profile'); setMobileMenuOpen(false) }}
+                        onClick={() => { if (user) navigateToProfile(user.id); setMobileMenuOpen(false) }}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[oklch(0.7_0.04_280)] hover:bg-[oklch(0.627_0.265_303.9_/_0.1)] hover:text-white transition-all"
                       >
                         <User className="h-5 w-5" />

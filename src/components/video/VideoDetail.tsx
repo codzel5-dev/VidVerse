@@ -42,6 +42,7 @@ function timeAgo(date: string): string {
 export default function VideoDetail() {
   const selectedVideoId = useAppStore((s) => s.selectedVideoId)
   const goHome = useAppStore((s) => s.goHome)
+  const navigateToProfile = useAppStore((s) => s.navigateToProfile)
   const { video, loading, refetch } = useVideoDetail(selectedVideoId)
   const { videos: relatedVideos } = useVideos({ limit: 6, sort: 'popular' })
   const user = useAuthStore((s) => s.user)
@@ -252,6 +253,35 @@ export default function VideoDetail() {
             </div>
           </div>
 
+          {/* Creator info card — clickable to navigate to profile (?u=USER_ID) */}
+          {video.user && (
+            <Card className="glass-card card-aurora p-4 rounded-2xl border-[oklch(0.25_0.04_280)]">
+              <button
+                onClick={() => navigateToProfile(video.user!.id)}
+                className="w-full flex items-center gap-3 group text-right"
+                aria-label={`عرض ملف ${video.user.name}`}
+              >
+                <Avatar className="h-12 w-12 border-2 border-[oklch(0.627_0.265_303.9_/_0.3)] group-hover:border-[oklch(0.627_0.265_303.9)] transition-colors">
+                  <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] font-bold">
+                    {video.user.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-semibold text-white group-hover:text-gradient-aurora transition-all flex items-center gap-2">
+                    {video.user.name}
+                    {video.user.role === 'admin' && (
+                      <Badge className="badge-aurora border-0 text-[10px] rounded-md px-1.5 py-0">مدير</Badge>
+                    )}
+                  </p>
+                  <p className="text-xs text-[oklch(0.55_0.04_280)]">عرض الملف الشخصي والفيديوهات</p>
+                </div>
+                <svg className="h-5 w-5 text-[oklch(0.55_0.04_280)] group-hover:text-[oklch(0.827_0.165_303.9)] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+            </Card>
+          )}
+
           {/* Rating */}
           <Card className="glass-card card-aurora p-4 rounded-2xl border-[oklch(0.25_0.04_280)]">
             <div className="flex items-center gap-4">
@@ -324,14 +354,25 @@ export default function VideoDetail() {
                 const c = comment as { id: string; content: string; createdAt: string; user: { id: string; name: string; avatar: string | null }; replies: Record<string, unknown>[]; likes: unknown[] }
                 return (
                   <div key={c.id} className="flex gap-3">
-                    <Avatar className="h-8 w-8 border-[oklch(0.627_0.265_303.9_/_0.3)]">
-                      <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-xs font-semibold">
-                        {c.user?.name?.charAt(0) || 'م'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <button
+                      onClick={() => c.user?.id && navigateToProfile(c.user.id)}
+                      className="shrink-0"
+                      aria-label={`عرض ملف ${c.user?.name}`}
+                    >
+                      <Avatar className="h-8 w-8 border-[oklch(0.627_0.265_303.9_/_0.3)] hover:border-[oklch(0.627_0.265_303.9)] transition-colors">
+                        <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-xs font-semibold">
+                          {c.user?.name?.charAt(0) || 'م'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-white">{c.user?.name}</span>
+                        <button
+                          onClick={() => c.user?.id && navigateToProfile(c.user.id)}
+                          className="text-sm font-medium text-white hover:text-[oklch(0.827_0.165_303.9)] hover:underline transition-colors"
+                        >
+                          {c.user?.name}
+                        </button>
                         <span className="text-xs text-[oklch(0.55_0.04_280)]">{timeAgo(c.createdAt)}</span>
                       </div>
                       <p className="text-sm text-[oklch(0.7_0.04_280)]">{c.content}</p>
@@ -341,14 +382,25 @@ export default function VideoDetail() {
                             const r = reply as { id: string; content: string; createdAt: string; user: { id: string; name: string; avatar: string | null } }
                             return (
                               <div key={r.id} className="flex gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-[10px]">
-                                    {r.user?.name?.charAt(0) || 'م'}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <button
+                                  onClick={() => r.user?.id && navigateToProfile(r.user.id)}
+                                  className="shrink-0"
+                                  aria-label={`عرض ملف ${r.user?.name}`}
+                                >
+                                  <Avatar className="h-6 w-6 hover:border-[oklch(0.627_0.265_303.9)] border border-transparent transition-colors">
+                                    <AvatarFallback className="bg-[oklch(0.13_0.028_280)] text-[oklch(0.715_0.183_192.5)] text-[10px]">
+                                      {r.user?.name?.charAt(0) || 'م'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </button>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-white">{r.user?.name}</span>
+                                    <button
+                                      onClick={() => r.user?.id && navigateToProfile(r.user.id)}
+                                      className="text-xs font-medium text-white hover:text-[oklch(0.827_0.165_303.9)] hover:underline transition-colors"
+                                    >
+                                      {r.user?.name}
+                                    </button>
                                     <span className="text-xs text-[oklch(0.55_0.04_280)]">{timeAgo(r.createdAt)}</span>
                                   </div>
                                   <p className="text-xs text-[oklch(0.7_0.04_280)]">{r.content}</p>

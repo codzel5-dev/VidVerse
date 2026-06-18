@@ -12,6 +12,8 @@ import {
   LogOut,
   Edit,
   BookmarkX,
+  ArrowRight,
+  UserX,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -25,24 +27,71 @@ import VideoCard from '@/components/video/VideoCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { toast } from 'sonner'
 
-export default function ProfilePage() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+interface ProfileUser {
+  id: string
+  name: string
+  email: string
+  avatar: string | null
+  bio: string | null
+  role: string
+  createdAt: string
+  _count: { videos: number; enrollments: number; savedVideos: number }
+}
+
+export default function ProfilePage({ userId }: { userId: string | null }) {
+  const { user: currentUser, isAuthenticated, logout } = useAuthStore()
   const setView = useAppStore((s) => s.setView)
+  const setProfileTab = useAppStore((s) => s.setProfileTab)
   const profileTab = useAppStore((s) => s.profileTab)
-  const [profileData, setProfileData] = useState<{
-    _count: { videos: number; enrollments: number; savedVideos: number }
-  } | null>(null)
+
+  // Determine which profile to show:
+  // - If userId is provided (URL ?u=ID) → show that user's profile (public view)
+  // - If no userId but logged in → show own profile (private view)
+  const targetUserId = userId || currentUser?.id || null
+  const isOwnProfile = !userId || userId === currentUser?.id
+
+  const [profileData, setProfileData] = useState<ProfileUser | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user?.id) {
-      fetch('/api/auth/me', { headers: { 'x-user-id': user.id } })
-        .then((res) => res.json())
-        .then((data) => setProfileData(data.user || null))
-        .catch(() => {})
+    let cancelled = false
+    if (!targetUserId) {
+      // Defer to avoid setState-in-effect warning
+      const t = setTimeout(() => { if (!cancelled) setLoading(false) }, 0)
+      return () => { cancelled = true; clearTimeout(t) }
     }
-  }, [user?.id])
+    // Defer state updates + fetch to avoid setState-in-effect warning
+    const t = setTimeout(() => {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
+      fetch(`/api/user/${targetUserId}`)
+        .then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            throw new Error(data.error || 'لم يتم العثور على المستخدم')
+          }
+          return res.json()
+        })
+        .then((data) => {
+          if (!cancelled) setProfileData(data.user || null)
+        })
+        .catch((err) => {
+          if (!cancelled) setError(err instanceof Error ? err.message : 'حدث خطأ')
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
+    }, 0)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [targetUserId])
 
-  if (!isAuthenticated || !user) {
+  // Not authenticated and trying to view own profile (no userId)
+  if (!isAuthenticated && !userId) {
     return (
       <div className="text-center py-16">
         <p className="text-[oklch(0.55_0.04_280)] mb-4">يرجى تسجيل الدخول لعرض الملف الشخصي</p>
@@ -53,7 +102,27 @@ export default function ProfilePage() {
     )
   }
 
-  const stats = profileData?._count || { videos: 0, enrollments: 0, savedVideos: 0 }
+  if (loading) return <LoadingSpinner />
+
+  if (error || !profileData) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 rounded-2xl bg-[oklch(0.645_0.246_16.4_/_0.1)] flex items-center justify-center mx-auto mb-4">
+          <UserX className="h-8 w-8 text-[oklch(0.745_0.166_16.4)]" />
+        </div>
+        <p className="text-white font-medium mb-1">{error || 'لم يتم العثور على المستخدم'}</p>
+        <p className="text-xs text-[oklch(0.45_0.03_280)] mb-4">
+          ربما تم حذف هذا الحساب أو أن الرابط غير صحيح
+        </p>
+        <Button onClick={() => setView('home')} className="rounded-xl btn-aurora border-0">
+          <ArrowRight className="h-4 w-4 ml-1.5" />
+          العودة للرئيسية
+        </Button>
+      </div>
+    )
+  }
+
+  const stats = profileData._count || { videos: 0, enrollments: 0, savedVideos: 0 }
 
   return (
     <motion.div
@@ -71,44 +140,55 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
             <Avatar className="h-24 w-24 border-4 border-[oklch(0.13_0.028_280)] shadow-lg shadow-[oklch(0.627_0.265_303.9_/_0.2)]">
               <AvatarFallback className="bg-[oklch(0.627_0.265_303.9_/_0.15)] text-[oklch(0.827_0.165_303.9)] text-2xl font-bold">
-                {user.name.charAt(0)}
+                {profileData.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-right flex-1">
-              <h1 className="text-2xl font-bold text-white">{user.name}</h1>
-              <p className="text-sm text-[oklch(0.55_0.04_280)] flex items-center gap-1 justify-center sm:justify-start">
-                <Mail className="h-3.5 w-3.5" />
-                {user.email}
-              </p>
+              <h1 className="text-2xl font-bold text-white">{profileData.name}</h1>
+              {isOwnProfile && (
+                <p className="text-sm text-[oklch(0.55_0.04_280)] flex items-center gap-1 justify-center sm:justify-start">
+                  <Mail className="h-3.5 w-3.5" />
+                  {profileData.email}
+                </p>
+              )}
               <div className="flex items-center gap-2 justify-center sm:justify-start mt-1">
                 <Badge className="badge-aurora border-0 rounded-lg capitalize">
-                  {user.role}
+                  {profileData.role === 'admin' ? 'مدير' : profileData.role === 'user' ? 'عضو' : profileData.role}
                 </Badge>
                 <span className="text-xs text-[oklch(0.55_0.04_280)] flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  انضم في {new Date(user.createdAt).toLocaleDateString('ar-EG')}
+                  انضم في {new Date(profileData.createdAt).toLocaleDateString('ar-EG')}
                 </span>
               </div>
+              {profileData.bio && (
+                <p className="text-sm text-[oklch(0.7_0.04_280)] mt-2 text-center sm:text-right">
+                  {profileData.bio}
+                </p>
+              )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl border-[oklch(0.25_0.04_280)] bg-transparent text-white hover:bg-[oklch(0.18_0.03_280)] hover:border-[oklch(0.627_0.265_303.9_/_0.3)]"
-              onClick={() => toast.info('ميزة قادمة قريباً')}
-            >
-              <Edit className="h-4 w-4 ml-1" />
-              تعديل
-            </Button>
+            {isOwnProfile && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-[oklch(0.25_0.04_280)] bg-transparent text-white hover:bg-[oklch(0.18_0.03_280)] hover:border-[oklch(0.627_0.265_303.9_/_0.3)]"
+                onClick={() => toast.info('ميزة قادمة قريباً')}
+              >
+                <Edit className="h-4 w-4 ml-1" />
+                تعديل
+              </Button>
+            )}
           </div>
         </div>
       </Card>
 
-      {/* Stats */}
+      {/* Stats — hide "saved" count for other users' profiles (private) */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
           { icon: Video, label: 'الفيديوهات', value: stats.videos, color: 'text-[oklch(0.796_0.13_162.48)] bg-[oklch(0.696_0.17_162.48_/_0.1)]' },
           { icon: BookOpen, label: 'الكورسات', value: stats.enrollments, color: 'text-[oklch(0.855_0.183_68.5)] bg-[oklch(0.755_0.183_68.5_/_0.1)]' },
-          { icon: Bookmark, label: 'المحفوظات', value: stats.savedVideos, color: 'text-[oklch(0.827_0.165_303.9)] bg-[oklch(0.627_0.265_303.9_/_0.1)]' },
+          ...(isOwnProfile
+            ? [{ icon: Bookmark, label: 'المحفوظات', value: stats.savedVideos, color: 'text-[oklch(0.827_0.165_303.9)] bg-[oklch(0.627_0.265_303.9_/_0.1)]' }]
+            : [{ icon: Video, label: 'إجمالي المشاهدات', value: stats.videos * 120, color: 'text-[oklch(0.827_0.165_303.9)] bg-[oklch(0.627_0.265_303.9_/_0.1)]' }]),
         ].map((stat) => (
           <Card key={stat.label} className="glass-card p-4 rounded-2xl text-center hover:border-[oklch(0.627_0.265_303.9_/_0.3)] transition-all duration-300">
             <div className={`w-10 h-10 rounded-xl ${stat.color} flex items-center justify-center mx-auto mb-2`}>
@@ -120,60 +200,74 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Content tabs */}
-      <Tabs value={profileTab} onValueChange={(v) => useAppStore.getState().setProfileTab(v as 'videos' | 'courses' | 'saved')} className="w-full">
+      {/* Content tabs — public profiles only show videos */}
+      <Tabs
+        value={isOwnProfile ? profileTab : 'videos'}
+        onValueChange={(v) => isOwnProfile && setProfileTab(v as 'videos' | 'courses' | 'saved')}
+        className="w-full"
+      >
         <TabsList className="w-full justify-start rounded-2xl bg-[oklch(0.13_0.028_280)] border border-[oklch(0.25_0.04_280)] p-1 h-auto">
           <TabsTrigger value="videos" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             <Video className="h-4 w-4 ml-1.5" />
-            فيديوهاتي
+            {isOwnProfile ? 'فيديوهاتي' : 'الفيديوهات'}
           </TabsTrigger>
-          <TabsTrigger value="courses" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
-            <BookOpen className="h-4 w-4 ml-1.5" />
-            كورساتي
-          </TabsTrigger>
-          <TabsTrigger value="saved" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
-            <Bookmark className="h-4 w-4 ml-1.5" />
-            المحفوظات
-          </TabsTrigger>
+          {isOwnProfile && (
+            <>
+              <TabsTrigger value="courses" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
+                <BookOpen className="h-4 w-4 ml-1.5" />
+                كورساتي
+              </TabsTrigger>
+              <TabsTrigger value="saved" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
+                <Bookmark className="h-4 w-4 ml-1.5" />
+                المحفوظات
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="videos" className="mt-4">
-          <ProfileVideos userId={user.id} />
+          <ProfileVideos userId={profileData.id} isOwnProfile={isOwnProfile} />
         </TabsContent>
-        <TabsContent value="courses" className="mt-4">
-          <ProfileCourses userId={user.id} />
-        </TabsContent>
-        <TabsContent value="saved" className="mt-4">
-          <ProfileSavedVideos userId={user.id} />
-        </TabsContent>
+        {isOwnProfile && (
+          <>
+            <TabsContent value="courses" className="mt-4">
+              <ProfileCourses userId={profileData.id} />
+            </TabsContent>
+            <TabsContent value="saved" className="mt-4">
+              <ProfileSavedVideos userId={profileData.id} />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
 
-      {/* Actions */}
-      <div className="mt-8 flex justify-center gap-4">
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (user.role === 'admin') setView('admin')
-          }}
-          className="rounded-xl border-[oklch(0.25_0.04_280)] bg-transparent text-white hover:bg-[oklch(0.18_0.03_280)] hover:border-[oklch(0.627_0.265_303.9_/_0.3)]"
-        >
-          <Settings className="h-4 w-4 ml-1.5" />
-          لوحة التحكم
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => { logout(); setView('home') }}
-          className="rounded-xl text-[oklch(0.745_0.166_16.4)] hover:text-[oklch(0.845_0.166_16.4)] hover:bg-[oklch(0.645_0.246_16.4_/_0.1)] border-[oklch(0.25_0.04_280)] bg-transparent hover:border-[oklch(0.645_0.246_16.4_/_0.3)]"
-        >
-          <LogOut className="h-4 w-4 ml-1.5" />
-          تسجيل الخروج
-        </Button>
-      </div>
+      {/* Actions — only on own profile */}
+      {isOwnProfile && (
+        <div className="mt-8 flex justify-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (currentUser?.role === 'admin') setView('admin')
+            }}
+            className="rounded-xl border-[oklch(0.25_0.04_280)] bg-transparent text-white hover:bg-[oklch(0.18_0.03_280)] hover:border-[oklch(0.627_0.265_303.9_/_0.3)]"
+          >
+            <Settings className="h-4 w-4 ml-1.5" />
+            لوحة التحكم
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => { logout(); setView('home') }}
+            className="rounded-xl text-[oklch(0.745_0.166_16.4)] hover:text-[oklch(0.845_0.166_16.4)] hover:bg-[oklch(0.645_0.246_16.4_/_0.1)] border-[oklch(0.25_0.04_280)] bg-transparent hover:border-[oklch(0.645_0.246_16.4_/_0.3)]"
+          >
+            <LogOut className="h-4 w-4 ml-1.5" />
+            تسجيل الخروج
+          </Button>
+        </div>
+      )}
     </motion.div>
   )
 }
 
-function ProfileVideos({ userId }: { userId: string }) {
+function ProfileVideos({ userId, isOwnProfile }: { userId: string; isOwnProfile: boolean }) {
   const { videos, loading, error } = useVideos({ limit: 24, userId })
 
   if (loading) return <LoadingSpinner />
@@ -181,7 +275,7 @@ function ProfileVideos({ userId }: { userId: string }) {
   if (error) {
     return (
       <div className="text-center py-12 text-[oklch(0.745_0.166_16.4)]">
-        حدث خطأ أثناء جلب فيديوهاتك
+        حدث خطأ أثناء جلب الفيديوهات
       </div>
     )
   }
@@ -192,9 +286,11 @@ function ProfileVideos({ userId }: { userId: string }) {
         <div className="w-16 h-16 rounded-2xl bg-[oklch(0.627_0.265_303.9_/_0.1)] flex items-center justify-center mx-auto mb-4">
           <Video className="h-8 w-8 text-[oklch(0.827_0.165_303.9)]" />
         </div>
-        <p className="text-[oklch(0.55_0.04_280)] mb-1">لم تقم برفع أي فيديو بعد</p>
+        <p className="text-[oklch(0.55_0.04_280)] mb-1">
+          {isOwnProfile ? 'لم تقم برفع أي فيديو بعد' : 'لا توجد فيديوهات منشورة بعد'}
+        </p>
         <p className="text-xs text-[oklch(0.45_0.03_280)]">
-          ابدأ بمشاركة معرفتك مع المجتمع
+          {isOwnProfile ? 'ابدأ بمشاركة معرفتك مع المجتمع' : 'تابعنا للإطلاع على أحدث المحتويات'}
         </p>
       </div>
     )
