@@ -2,13 +2,15 @@
 
 import { create } from 'zustand'
 
-export type ViewType = 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register'
+export type ViewType = 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register' | 'blog' | 'blog-post'
 
 interface AppState {
   currentView: ViewType
   selectedVideoId: string | null
   selectedCourseId: string | null
   selectedUserId: string | null
+  selectedBlogSlug: string | null
+  blogTagFilter: string | null
   searchQuery: string
   sidebarOpen: boolean
   activeCategory: string | null
@@ -19,6 +21,8 @@ interface AppState {
   setSelectedVideoId: (id: string | null) => void
   setSelectedCourseId: (id: string | null) => void
   setSelectedUserId: (id: string | null) => void
+  setSelectedBlogSlug: (slug: string | null) => void
+  setBlogTagFilter: (tag: string | null) => void
   setSearchQuery: (query: string) => void
   setSidebarOpen: (open: boolean) => void
   setActiveCategory: (category: string | null) => void
@@ -27,6 +31,8 @@ interface AppState {
   navigateToCourse: (id: string) => void
   navigateToSearch: (query: string) => void
   navigateToProfile: (userId: string) => void
+  navigateToBlog: () => void
+  navigateToBlogPost: (slug: string) => void
   goHome: () => void
   setProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
   navigateToProfileTab: (tab: 'videos' | 'courses' | 'saved') => void
@@ -37,6 +43,8 @@ export const useAppStore = create<AppState>()((set) => ({
   selectedVideoId: null,
   selectedCourseId: null,
   selectedUserId: null,
+  selectedBlogSlug: null,
+  blogTagFilter: null,
   searchQuery: '',
   sidebarOpen: false,
   activeCategory: null,
@@ -47,6 +55,8 @@ export const useAppStore = create<AppState>()((set) => ({
   setSelectedVideoId: (id) => set({ selectedVideoId: id }),
   setSelectedCourseId: (id) => set({ selectedCourseId: id }),
   setSelectedUserId: (id) => set({ selectedUserId: id }),
+  setSelectedBlogSlug: (slug) => set({ selectedBlogSlug: slug }),
+  setBlogTagFilter: (tag) => set({ blogTagFilter: tag }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveCategory: (category) => set({ activeCategory: category }),
@@ -82,12 +92,32 @@ export const useAppStore = create<AppState>()((set) => ({
   },
   navigateToSearch: (query) =>
     set({ currentView: 'search', searchQuery: query }),
+  navigateToBlog: () => {
+    set({ currentView: 'blog', selectedBlogSlug: null })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('v')
+    url.searchParams.delete('c')
+    url.searchParams.delete('u')
+    url.searchParams.delete('b')
+    window.history.pushState({}, '', url.toString())
+  },
+  navigateToBlogPost: (slug) => {
+    set({ currentView: 'blog-post', selectedBlogSlug: slug })
+    const url = new URL(window.location.href)
+    url.searchParams.set('b', slug)
+    url.searchParams.delete('v')
+    url.searchParams.delete('c')
+    url.searchParams.delete('u')
+    window.history.pushState({}, '', url.toString())
+  },
   goHome: () => {
     set({
       currentView: 'home',
       selectedVideoId: null,
       selectedCourseId: null,
       selectedUserId: null,
+      selectedBlogSlug: null,
+      blogTagFilter: null,
       searchQuery: '',
       activeCategory: null,
     })
@@ -95,6 +125,8 @@ export const useAppStore = create<AppState>()((set) => ({
     url.searchParams.delete('v')
     url.searchParams.delete('c')
     url.searchParams.delete('u')
+    url.searchParams.delete('b')
+    url.searchParams.delete('tag')
     window.history.pushState({}, '', url.toString())
   },
 }))

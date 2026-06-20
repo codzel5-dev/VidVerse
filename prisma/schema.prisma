@@ -351,3 +351,25 @@ model AdBanner {
   updatedAt   DateTime @updatedAt
 }
 
+// ===== Ad Networks (Monetag / 5gvci / etc.) — blog only =====
+model AdNetwork {
+  id           String   @id @default(cuid())
+  name         String
+  scriptUrl    String?
+  zoneId       String?
+  domain       String?
+  async        Boolean  @default(true)
+  defer        Boolean  @default(false)
+  cfAsync      Boolean  @default(true)
+  placement    String   @default("head") // head | body-start | body-end
+  isActive     Boolean  @default(true)
+  order        Int      @default(0)
+  notes        String?
+  type         String?  // "external" | "inline"
+  inlineScript String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+

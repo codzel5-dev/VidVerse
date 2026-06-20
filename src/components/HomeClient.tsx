@@ -17,6 +17,8 @@ import RegisterForm from '@/components/auth/RegisterForm'
 import ProfilePage from '@/components/auth/ProfilePage'
 import AdminDashboard from '@/components/admin/AdminDashboard'
 import SearchResults from '@/components/search/SearchResults'
+import BlogHome from '@/components/blog/BlogHome'
+import BlogPostView from '@/components/blog/BlogPostView'
 import { useAppStore } from '@/store/app-store'
 
 export interface Banner {
@@ -212,6 +214,16 @@ function ViewRenderer({ data }: { data: InitialData }) {
             <SearchResults />
           </div>
         )}
+        {currentView === 'blog' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <BlogHome />
+          </div>
+        )}
+        {currentView === 'blog-post' && (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <BlogPostView />
+          </div>
+        )}
         {currentView === 'login' && <LoginForm />}
         {currentView === 'register' && <RegisterForm />}
       </motion.main>
@@ -230,6 +242,8 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
   const setSelectedCourseId = useAppStore((s) => s.setSelectedCourseId)
   const setSelectedUserId = useAppStore((s) => s.setSelectedUserId)
   const setSearchQuery = useAppStore((s) => s.setSearchQuery)
+  const setSelectedBlogSlug = useAppStore((s) => s.setSelectedBlogSlug)
+  const setBlogTagFilter = useAppStore((s) => s.setBlogTagFilter)
 
   // Initialize from URL parameters on mount
   useEffect(() => {
@@ -237,6 +251,8 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
     const videoCode = params.get('v')
     const courseCode = params.get('c')
     const userCode = params.get('u')
+    const blogSlug = params.get('b')
+    const tagFilter = params.get('tag')
     const search = params.get('q')
 
     if (videoCode) {
@@ -248,6 +264,12 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
     } else if (userCode) {
       setSelectedUserId(userCode)
       setView('profile')
+    } else if (blogSlug) {
+      setSelectedBlogSlug(blogSlug)
+      setView('blog-post')
+    } else if (tagFilter) {
+      setBlogTagFilter(tagFilter)
+      setView('blog')
     } else if (search) {
       setSearchQuery(search)
       setView('search')
@@ -261,6 +283,8 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
       const videoCode = params.get('v')
       const courseCode = params.get('c')
       const userCode = params.get('u')
+      const blogSlug = params.get('b')
+      const tagFilter = params.get('tag')
       const search = params.get('q')
 
       if (videoCode) {
@@ -272,6 +296,12 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
       } else if (userCode) {
         setSelectedUserId(userCode)
         setView('profile')
+      } else if (blogSlug) {
+        setSelectedBlogSlug(blogSlug)
+        setView('blog-post')
+      } else if (tagFilter) {
+        setBlogTagFilter(tagFilter)
+        setView('blog')
       } else if (search) {
         setSearchQuery(search)
         setView('search')
@@ -280,6 +310,8 @@ export default function HomeClient({ initialData }: { initialData: InitialData }
         setSelectedVideoId(null)
         setSelectedCourseId(null)
         setSelectedUserId(null)
+        setSelectedBlogSlug(null)
+        setBlogTagFilter(null)
       }
     }
 

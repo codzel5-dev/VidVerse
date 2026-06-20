@@ -11,6 +11,7 @@ import {
   Bookmark,
   Video,
   Sparkles,
+  Newspaper,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -29,11 +30,12 @@ import { useAppStore } from '@/store/app-store'
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { setView, goHome, navigateToProfileTab, navigateToProfile } = useAppStore()
+  const { setView, goHome, navigateToProfileTab, navigateToProfile, navigateToBlog } = useAppStore()
 
   const navItems = [
     { label: 'الرئيسية', view: 'home' as const, icon: Play },
     { label: 'الفيديوهات', view: 'home' as const, icon: Video },
+    { label: 'المدونة', view: 'blog' as const, icon: Newspaper },
     { label: 'المحفوظات', view: 'saved' as const, icon: Bookmark },
   ]
 
@@ -41,8 +43,9 @@ export default function Header() {
     if (view === 'home') {
       goHome()
     } else if (view === 'saved') {
-      // فتح تبويب المحفوظات في صفحة البروفايل
       navigateToProfileTab('saved')
+    } else if (view === 'blog') {
+      navigateToBlog()
     } else {
       setView(view as 'home' | 'video' | 'course' | 'profile' | 'admin' | 'search' | 'login' | 'register')
     }

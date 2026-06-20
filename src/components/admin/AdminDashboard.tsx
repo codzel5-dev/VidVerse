@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Megaphone,
+  Newspaper,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthStore } from '@/store/auth-store'
@@ -20,6 +21,8 @@ import CourseManager from './CourseManager'
 import CommentManager from './CommentManager'
 import AdminSettingsPanel from './AdminSettingsPanel'
 import AdminBannersPanel from './AdminBannersPanel'
+import BlogManager from './BlogManager'
+import AdNetworksPanel from './AdNetworksPanel'
 
 export default function AdminDashboard() {
   const user = useAuthStore((s) => s.user)
@@ -72,6 +75,14 @@ export default function AdminDashboard() {
             <MessageCircle className="h-4 w-4 ml-1.5" />
             التعليقات
           </TabsTrigger>
+          <TabsTrigger value="blog" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
+            <Newspaper className="h-4 w-4 ml-1.5" />
+            المدونة
+          </TabsTrigger>
+          <TabsTrigger value="ad-networks" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
+            <Megaphone className="h-4 w-4 ml-1.5" />
+            إعلانات المدونة
+          </TabsTrigger>
           <TabsTrigger value="banners" className="rounded-xl data-[state=active]:bg-[oklch(0.627_0.265_303.9_/_0.15)] data-[state=active]:text-[oklch(0.827_0.165_303.9)]">
             <Megaphone className="h-4 w-4 ml-1.5" />
             الإعلانات
@@ -96,6 +107,12 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="comments" className="mt-4">
           <CommentManager />
+        </TabsContent>
+        <TabsContent value="blog" className="mt-4">
+          <BlogManager />
+        </TabsContent>
+        <TabsContent value="ad-networks" className="mt-4">
+          <AdNetworksPanel />
         </TabsContent>
         <TabsContent value="banners" className="mt-4">
           <AdminBannersPanel />
