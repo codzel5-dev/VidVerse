@@ -8,6 +8,7 @@ async function checkAdmin(userId: string | null) {
 }
 
 // PATCH /api/ads/[id] - Admin: update an ad network (partial)
+// النموذج المبسّط: الإعلان = كود JavaScript خام. type يبقى "inline".
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +26,7 @@ export async function PATCH(
     const existing = await db.adNetwork.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json(
-        { error: 'شبكة الإعلانات غير موجودة' },
+        { error: 'الإعلان غير موجود' },
         { status: 404 }
       )
     }
@@ -33,46 +34,17 @@ export async function PATCH(
     const body = await request.json()
     const {
       name,
-      type,
-      scriptUrl,
       inlineScript,
-      zoneId,
-      domain,
-      async: asyncProp,
-      defer,
-      cfAsync,
       placement,
       isActive,
       order,
       notes,
     } = body
 
-    // Determine the effective type for validation (fall back to existing)
-    const effectiveType = type ?? existing.type ?? 'external'
-
-    if (type !== undefined) {
-      if (type !== 'external' && type !== 'inline') {
-        return NextResponse.json(
-          { error: 'نوع الشبكة غير صالح (external أو inline)' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Validate required fields based on the effective type
-    const effectiveScriptUrl = scriptUrl !== undefined ? scriptUrl : existing.scriptUrl
-    const effectiveInlineScript =
-      inlineScript !== undefined ? inlineScript : existing.inlineScript
-
-    if (effectiveType === 'external' && !effectiveScriptUrl?.trim()) {
+    // Validate required fields (only when provided)
+    if (inlineScript !== undefined && !inlineScript?.trim()) {
       return NextResponse.json(
-        { error: 'رابط السكربت (scriptUrl) مطلوب للنوع external' },
-        { status: 400 }
-      )
-    }
-    if (effectiveType === 'inline' && !effectiveInlineScript?.trim()) {
-      return NextResponse.json(
-        { error: 'السكربت المضمّن (inlineScript) مطلوب للنوع inline' },
+        { error: 'كود JavaScript لا يمكن أن يكون فارغاً' },
         { status: 400 }
       )
     }
@@ -81,18 +53,11 @@ export async function PATCH(
       where: { id },
       data: {
         name: name !== undefined ? name.trim() : undefined,
-        type: type !== undefined ? type : undefined,
-        scriptUrl:
-          scriptUrl !== undefined ? (scriptUrl?.trim() || null) : undefined,
+        type: 'inline',
         inlineScript:
           inlineScript !== undefined
             ? inlineScript?.trim() || null
             : undefined,
-        zoneId: zoneId !== undefined ? (zoneId?.trim() || null) : undefined,
-        domain: domain !== undefined ? (domain?.trim() || null) : undefined,
-        async: asyncProp !== undefined ? asyncProp : undefined,
-        defer: defer !== undefined ? defer : undefined,
-        cfAsync: cfAsync !== undefined ? cfAsync : undefined,
         placement: placement !== undefined ? placement || 'head' : undefined,
         isActive: isActive !== undefined ? isActive : undefined,
         order: order !== undefined ? order : undefined,
@@ -104,7 +69,7 @@ export async function PATCH(
   } catch (error) {
     console.error('Update ad network error:', error)
     return NextResponse.json(
-      { error: 'حدث خطأ أثناء تحديث شبكة الإعلانات' },
+      { error: 'حدث خطأ أثناء تحديث الإعلان' },
       { status: 500 }
     )
   }
@@ -128,7 +93,7 @@ export async function DELETE(
     const existing = await db.adNetwork.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json(
-        { error: 'شبكة الإعلانات غير موجودة' },
+        { error: 'الإعلان غير موجود' },
         { status: 404 }
       )
     }
@@ -139,7 +104,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Delete ad network error:', error)
     return NextResponse.json(
-      { error: 'حدث خطأ أثناء حذف شبكة الإعلانات' },
+      { error: 'حدث خطأ أثناء حذف الإعلان' },
       { status: 500 }
     )
   }

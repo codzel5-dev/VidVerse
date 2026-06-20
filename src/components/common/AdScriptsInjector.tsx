@@ -21,7 +21,7 @@ import { useEffect } from "react";
 interface AdNetwork {
   id: string;
   name: string;
-  type: string; // "external" | "inline"
+  type: string | null; // "external" | "inline" | null (يُحدد تلقائياً حسب المحتوى)
   scriptUrl: string | null;
   inlineScript: string | null;
   async: boolean;
@@ -61,15 +61,17 @@ export function AdScriptsInjector() {
 
           const script = document.createElement("script");
 
-          // تعيين المحتوى حسب النوع
-          if (network.type === "inline" && network.inlineScript) {
+          // تحديد نوع الحقن حسب المحتوى المتوفّر (مرن مع type=null)
+          // أولوية: إذا وُجد كود مضمّن (inlineScript) نعامله كـ inline،
+          // وإلا إذا وُجد رابط (scriptUrl) نعامله كـ external.
+          if (network.inlineScript && network.inlineScript.trim()) {
             // السكربتات المضمّنة: نضع الكود في textContent
             // نزيل وسوم <script> و </script> إذا تم لصقها بالكامل
             let code = network.inlineScript.trim();
             code = code.replace(/^<script\b[^>]*>/i, "").replace(/<\/script>\s*$/i, "").trim();
             if (!code) continue;
             script.textContent = code;
-          } else if (network.type === "external" && network.scriptUrl) {
+          } else if (network.scriptUrl && network.scriptUrl.trim()) {
             script.src = network.scriptUrl;
             script.async = network.async;
             script.defer = network.defer;
