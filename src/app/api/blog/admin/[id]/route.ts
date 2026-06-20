@@ -183,19 +183,16 @@ export async function PATCH(
       data.featured = featured
     }
 
-    // Sync tags: disconnect all existing, then reconnect to the new set
+    // Sync tags: استبدال الروابط الحالية بالقائمة الجديدة دفعة واحدة.
+    // ملاحظة: لا نستخدم `set: []` + `connectOrCreate` معاً لأن ذلك يسبب
+    // خطأ Prisma P2014 (violates required relation) عند تحديث الـ slug
+    // في نفس المعاملة. بدلاً من ذلك نمرّر القائمة الجديدة إلى `set` مباشرة.
     if (tags !== undefined) {
       const tagRecords = tags.length > 0 ? await resolveTags(tags) : []
       data.tags = {
-        set: [], // clear existing connections
-        ...(tagRecords.length
-          ? {
-              connectOrCreate: tagRecords.map((t) => ({
-                where: { postId_tagId: { postId: id, tagId: t.id } },
-                create: { tagId: t.id },
-              })),
-            }
-          : {}),
+        set: tagRecords.map((t) => ({
+          postId_tagId: { postId: id, tagId: t.id },
+        })),
       }
     }
 
