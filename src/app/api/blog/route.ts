@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
       }),
       db.blogPost.count({ where }),
       db.blogTag.findMany({
+        where: {
+          posts: { some: { post: { status: 'published' } } },
+        },
         select: {
           id: true,
           name: true,
@@ -68,12 +71,17 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
-    const tags = allTags.map((t) => ({
-      id: t.id,
-      name: t.name,
-      slug: t.slug,
-      count: t.posts.length,
-    }))
+    // Only expose tags actually linked to at least one published post.
+    // Orphan tags (e.g. malformed comma-separated strings accidentally saved
+    // as a single tag) would otherwise pollute the filter pills bar.
+    const tags = allTags
+      .filter((t) => t.posts.length > 0)
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        count: t.posts.length,
+      }))
 
     // Flatten tags relation into a plain array for each post
     const mappedPosts = posts.map((p) => ({

@@ -107,12 +107,32 @@ function formatDate(iso: string): string {
   })
 }
 
-/** Parse the comma-separated tags input into a cleaned, de-duplicated list. */
+/**
+ * Parse the comma-separated tags input into a cleaned, de-duplicated list.
+ *
+ * Robust against common user mistakes:
+ *  - Splits on commas (the documented separator).
+ *  - Also splits on `#` so hashtag-style input like "#foo #bar" doesn't get
+ *    saved as one giant tag containing all the hashtags.
+ *  - Strips leading `#` characters from each token (Twitter/IG-style).
+ *  - Replaces underscores with spaces so "#Machine_Learning" becomes
+ *    "Machine Learning", matching the convention used by the rest of the
+ *    blog (existing tags all use spaces).
+ *  - Trims, ignores empty tokens, and de-duplicates case-insensitively.
+ */
 function parseTags(raw: string): string[] {
   const seen = new Set<string>()
   const out: string[] = []
-  for (const part of raw.split(',')) {
-    const trimmed = part.trim()
+  // Split on commas OR on `#` boundaries (treat # as a token start).
+  // This turns "#foo, #bar #baz" into ["foo", "bar", "baz"].
+  const parts = raw.split(/[,#]/)
+  for (const part of parts) {
+    const trimmed = part
+      .trim()
+      // Replace underscores with spaces (only when the token looks hashtag-like)
+      .replace(/_/g, ' ')
+      // Collapse runs of whitespace inside the name
+      .replace(/\s+/g, ' ')
     if (!trimmed) continue
     const key = trimmed.toLowerCase()
     if (seen.has(key)) continue
@@ -1025,7 +1045,7 @@ function EditorView({
           </div>
         ) : (
           <p className="text-xs text-[oklch(0.5_0.04_280)]">
-            افصل بين الوسوم بفاصلة. تُحوّل إلى معرّفات (slugs) تلقائياً عند الحفظ.
+            افصل بين الوسوم بفاصلة. يُقبل نمط الهاشتاق (#وسم) أيضاً وتُحوّل الشرطة السفلية (_) إلى مسافة تلقائياً.
           </p>
         )}
       </div>
